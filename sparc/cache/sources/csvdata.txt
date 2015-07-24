@@ -1,0 +1,95 @@
+================
+CSV Data Source
+================
+CSV Data Sources provide a way to generate ICachableItem's from a CSV source.
+
+SIMPLE EXAMPLE
+================
+
+**CSV File**
+First, you'll need a CSV file.  We'll use the sample file under tests
+  >>> import os
+  >>> csv_file = os.path.dirname(os.path.abspath(__file__)) + os.sep + 'tests' + os.sep + 'test_csvdata.csv'
+
+**ICachableItem implementation**
+We need an implementation of ICachableItem that represents a CSV line entry
+as a desired Python object.  By conforming to the ICachableItem interface, we
+insure that attribute access is common among different implementations.
+
+cachableItemMixin is a useful base class to start with.  We only need to extend
+from this class and add our unique information.
+
+  >>> from sparc.cache.item import cachableItemMixin
+  >>> class myBasicIssue(cachableItemMixin):
+  ...     def __init__(self, attributes=None):
+  ...         super(myBasicIssue, self).__init__('ENTRY #', attributes)
+  >>> from zope.component.factory import IFactory, Factory
+  >>> myBasicIssueFactory = Factory(myBasicIssue, 'myBasicIssueFactory')
+
+We are now ready to create our CSV Data Source object.  Once instantiated,
+this object will be capable of generating myBasicIssue objects for each 
+CSV entry.
+
+  >>> from zope.component.interfaces import IFactory
+  >>> from sparc.cache.sources.csvdata import CSVSourceFactory
+  >>> myCSVSource = CSVSourceFactory(csv_file, myBasicIssueFactory)
+  >>> myCSVSource.key()
+  'ENTRY #'
+
+  >>> item = myCSVSource.first()
+  >>> item.getId()
+  '9098328463'
+  
+  >>> items = myCSVSource.items()
+  >>> sum(1 for item in items)
+  343
+  
+  >>> item = myCSVSource.getById('6848179002')
+  >>> item.attributes['LOGGED BY - SSO ID']
+  '502070169'
+  
+MEDIUM EXAMPLE - Directory with both CSV and non-CSV files
+================
+We can pass a directory into the CSV Source Factory (instead of a file).  The
+class will parse each file looking for matches that validate against the 
+ICachableItem (myBasicIssue in this case) implementation.  Invalid sources will
+be skipped over.
+
+  >>> csv_dir = os.path.dirname(os.path.abspath(__file__)) + os.sep + 'tests'
+  >>> myCSVSource = CSVSourceFactory(csv_file, myBasicIssueFactory)
+  >>> myCSVSource.key()
+  'ENTRY #'
+
+  >>> item = myCSVSource.first()
+  >>> item.getId()
+  '9098328463'
+  
+  >>> items = myCSVSource.items()
+  >>> sum(1 for item in items)
+  343
+  
+  >>> item = myCSVSource.getById('6848179002')
+  >>> item.attributes['LOGGED BY - SSO ID']
+  '502070169'
+ 
+ ADVANCED EXAMPLE - Python DictReader
+================
+  >>> from csv import DictReader
+  >>> myDictReader = DictReader(csv_file)
+  >>> myCSVSource = CSVSourceFactory(csv_file, myBasicIssueFactory)
+  >>> myCSVSource.key()
+  'ENTRY #'
+
+  >>> item = myCSVSource.first()
+  >>> item.getId()
+  '9098328463'
+  
+  >>> items = myCSVSource.items()
+  >>> sum(1 for item in items)
+  343
+  
+  >>> item = myCSVSource.getById('6848179002')
+  >>> item.attributes['LOGGED BY - SSO ID']
+  '502070169'
+  
+  
