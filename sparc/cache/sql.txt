@@ -138,20 +138,20 @@ generate new instances of our implementation.
 Cached Item Mapper
 ================
 Now that we have two different classes, one representing information we want to
-and the other representing the information after it has been cached, we need 
+cache and the other representing the information after it has been cached, we need 
 a way to relate the 2 different classes.  For this task, we have the
 ICachedItemMapper interface.  This class provides a mechanism to populate
 an ICachedItem from information stored in a ICachableItem.
 
     >>> from zope.component import adapts
     >>> from sparc.cache.interfaces import ICachedItemMapper, ICachableSource
-    >>> from sparc.cache.sources import supportCentralDateTime, supportCentralDateTimeResolver
+    >>> from sparc.cache.sources import normalizedDateTime, normalizedDateTimeResolver
     >>> class myItemCacheMapper(object):
     ...     implements(ICachedItemMapper)
     ...     adapts(ICachableSource)
     ...     mapper = {
     ...            'entry_number'   :'ENTRY #', 
-    ...            'logged_date'    :supportCentralDateTime('LOGGED DATE')
+    ...            'logged_date'    :normalizedDateTime('LOGGED DATE')
     ...           }
     ...     def __init__(self, CachableSource):
     ...         self.cachableSource = CachableSource
@@ -165,7 +165,7 @@ an ICachedItem from information stored in a ICachableItem.
     ...     def get(self, sourceItem):
     ...         _cachedItem = self.factory()
     ...         _cachedItem.entry_number = int(sourceItem.attributes['ENTRY #'])
-    ...         _cachedItem.logged_date = supportCentralDateTimeResolver(self.logged_date).manage(sourceItem.attributes['LOGGED DATE'])
+    ...         _cachedItem.logged_date = normalizedDateTimeResolver(self.logged_date).manage(sourceItem.attributes['LOGGED DATE'])
     ...         return _cachedItem
 
 For the purpose of illustration, the above class fully implements the 
@@ -178,10 +178,10 @@ to read/write
     >>> class myItemCacheMapper(SqlObjectMapperMixin):
     ...     mapper = {
     ...            'entry_number'   :'ENTRY #', 
-    ...            'logged_date'    :supportCentralDateTime('LOGGED DATE')
+    ...            'logged_date'    :normalizedDateTime('LOGGED DATE')
     ...           }
 
-Much nicer to look at.  Also note the supportCentralDateTime() reference.  This
+Much nicer to look at.  Also note the normalizedDateTime() reference.  This
 class is an implementation of the IManagedCachedItemMapperAttributeKeyWrapper
 interface.  The interface is simple...it needs to supply a __call__() method
 that returns the string key name.
@@ -286,7 +286,7 @@ by getting one of our cachable items in hand.
 Let's make sure our mapper works ok.
 
     >>> myMapper.get(item).getId()
-    9098328463L
+    9098328463
         
 This item hasn't been cached yet
 
@@ -295,7 +295,7 @@ This item hasn't been cached yet
     True
     >>> cached = mySqlObjectCacheArea.cache(item)
     >>> cached.getId()
-    9098328463L
+    9098328463
     >>> mySqlObjectCacheArea.isDirty(item)
     False
     >>> item.attributes['LOGGED DATE'] = '6/18/2014 16:28' # same as orig
@@ -307,7 +307,7 @@ This item hasn't been cached yet
     >>> mySqlObjectCacheArea.isDirty(item)
     True
     >>> myMapper.get(item).getId()
-    9098328463L
+    9098328463
         
 Let's test the transactional features
 
@@ -316,7 +316,7 @@ Let's test the transactional features
     True
     >>> cached = mySqlObjectCacheArea.cache(item)
     >>> cached.getId()
-    9098328463L
+    9098328463
     >>> mySqlObjectCacheArea.isDirty(item)
     False
     >>> mySqlObjectCacheArea.commit()
@@ -327,7 +327,7 @@ Let's test the transactional features
     True
     >>> cached = mySqlObjectCacheArea.cache(item)
     >>> cached.getId()
-    9098328463L
+    9098328463
     >>> mySqlObjectCacheArea.commit()
 
  Let's get the item directly from the DB and make sure it acts like a
@@ -336,11 +336,11 @@ Let's test the transactional features
     >>> mySqlObjectCacheArea.session.expunge(cached)
     >>> cached = mySqlObjectCacheArea.get(item)
     >>> cached.getId()
-    9098328463L
+    9098328463
         
 Now lets do a bulk import...when we import it will bring in 1 less
 than the total CSV source (because the first entry already done and does not
 require an update)
 
     >>> mySqlObjectCacheArea.import_source(myCSVSource)
-    342
+    3

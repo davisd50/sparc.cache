@@ -11,11 +11,11 @@
         name="cache.sources.CSVSourceFactory"
         />
     
-    <!-- IFactory for Implementation of IsupportCentralDateTime
+    <!-- IFactory for Implementation of INormalizedDateTime
     -->
     <utility
-        component=".supportCentralDateTimeFactory"
-        name="cache.sources.supportCentralDateTime"
+        component=".normalizedDateTimeFactory"
+        name="cache.sources.normalizedDateTime"
         />
     
     <!--
@@ -23,7 +23,7 @@
     -->
     <adapter
         provides="..IManagedCachedItemMapperAttribute"
-        for=".IsupportCentralDateTime"
-        factory=".supportCentralDateTimeResolver"
+        for=".INormalizedDateTime"
+        factory=".normalizedDateTimeResolver"
         />
 </configure>

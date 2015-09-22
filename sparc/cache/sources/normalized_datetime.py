@@ -4,27 +4,27 @@ from zope.component import adapts
 from zope.component.factory import Factory
 
 from sparc.cache import IManagedCachedItemMapperAttribute, IManagedCachedItemMapperAttributeKeyWrapper
-from sparc.cache.sources import IsupportCentralDateTime
+from sparc.cache.sources import INormalizedDateTime
 from sparc.cache.item import cachableItemMixin
 from sparc.cache.sql import SqlObjectMapperMixin
 
-class supportCentralSqlObjectMapperMixin(SqlObjectMapperMixin):
-    """Base class for Support Central ICachedItemMapper implementations
+class normalizedFieldNameSqlObjectMapperMixin(SqlObjectMapperMixin):
+    """Base class for normalized field name ICachedItemMapper implementations
     """
     
     def __init__(self, myCachableSource, myCachedItemFactory):
         _new_mapper = {}
         for mapper, attribute in self.mapper.iteritems():
             if IManagedCachedItemMapperAttributeKeyWrapper.providedBy(attribute): # managed attributes
-                attribute.key = supportCentralCachableItemMixin.normalize(attribute.key)
+                attribute.key = normalizedFieldNameCachableItemMixin.normalize(attribute.key)
                 _new_mapper[mapper] = attribute
             else:
-                _new_mapper[mapper] = supportCentralCachableItemMixin.normalize(attribute) # unmanaged attribute
+                _new_mapper[mapper] = normalizedFieldNameCachableItemMixin.normalize(attribute) # unmanaged attribute
         self.mapper = _new_mapper
-        super(supportCentralSqlObjectMapperMixin, self).__init__(myCachableSource, myCachedItemFactory)
+        super(normalizedFieldNameSqlObjectMapperMixin, self).__init__(myCachableSource, myCachedItemFactory)
 
-class supportCentralCachableItemMixin(cachableItemMixin):
-    """Base class for ICachableItem implementations for Support Central data.
+class normalizedFieldNameCachableItemMixin(cachableItemMixin):
+    """Base class for ICachableItem implementations for data requiring normalized field names.
     
     This class provides extra functionality to deal with minor differences
     in attribute names when different variations of the string should be
@@ -73,19 +73,19 @@ class supportCentralCachableItemMixin(cachableItemMixin):
     attributes = property(_get_attributes, _set_attributes)
     key = property(_get_key, _set_key)
 
-class supportCentralDateTime(object):
-    implements(IsupportCentralDateTime, IManagedCachedItemMapperAttributeKeyWrapper)
+class normalizedDateTime(object):
+    implements(INormalizedDateTime, IManagedCachedItemMapperAttributeKeyWrapper)
     def __init__(self, key):
         self.key = key
     
     def __call__(self):
         return self.key
 
-supportCentralDateTimeFactory = Factory(supportCentralDateTime, 'supportCentralDateTime', 'generates empty IsupportCentralDateTime objects')
+normalizedDateTimeFactory = Factory(normalizedDateTime, 'normalizedDateTime', 'generates empty INormalizedDateTime objects')
 
-class supportCentralDateTimeResolver(object):
+class normalizedDateTimeResolver(object):
     implements(IManagedCachedItemMapperAttribute)
-    adapts(IsupportCentralDateTime)
+    adapts(INormalizedDateTime)
     
     def __init__(self, context):
         self.context = context

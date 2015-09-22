@@ -71,16 +71,7 @@ class SqlObjectMapperMixin(object):
             
             if queryAdapter(_sourceAttrKey, IManagedCachedItemMapperAttribute): # MANAGED ATTRIBUTES
                 _cachedAttrValue_new = None if not _sourceAttrValue else IManagedCachedItemMapperAttribute(_sourceAttrKey).manage(_sourceAttrValue)
-            #elif 'DATE' in _sql_field_type_name.upper():
-                # TODO: This needs fixing.  this assumes a SC-formated date strucutre...and even that fails,
-                #       cause SC changes it's own date structure on fields.  Need a more flexible solution to 
-                #       resolve a string into a Python DateTime.  We deal with it a little above...but this requires
-                #       folks to write an adapter.
-            #    try:
-            #        date_no_time = (_sourceAttrValue if ':' not in _sourceAttrValue else _sourceAttrValue.split(' ')[0]).split('/')
-            #        _cachedAttrValue_new = date(int(date_no_time[2]), int(date_no_time[0]), int(date_no_time[1]))
-            #    except IndexError:
-            #        _cachedAttrValue_new = None
+
             elif 'INT' in _sql_field_type_name.upper():
                 try:
                     _cachedAttrValue_new = int(_sourceAttrValue)
@@ -171,18 +162,6 @@ class SqlObjectCacheArea(object):
             _dirtyCachedItem = self.mapper.get(CachableItem)
             logger.debug("cached item required sql cache area update {id: %s, type: %s}", str(_dirtyCachedItem.getId()), str(_dirtyCachedItem.__class__))
             return self.session.merge(_dirtyCachedItem)
-        
-            #_cachedItem = self.get(CachableItem)
-            #if _cachedItem:
-            #    _newCacheItem = self.mapper.get(CachableItem)
-            #    #_cachedItem.__dict__ = _newCacheItem.__dict__
-            #    _cachedItem = self.session.merge(_newCacheItem)
-            #    logger.debug("cached item required sql cache area update {id: %s, type: %s}", str(_cachedItem.getId()), str(_cachedItem.__class__))
-            #else:
-            #    _cachedItem = self.mapper.get(CachableItem)
-            #    self.session.add(_cachedItem)
-            #    logger.debug("new item added into sql cache area {id: %s, type: %s}", str(_cachedItem.getId()), str(_cachedItem.__class__))
-            #return _cachedItem
         return False
     
     def import_source(self, CachableSource):
