@@ -1,6 +1,5 @@
-================
 SQL Cache Area
-================
+----------------
 SQL implementation of ICacheArea, providing a mechanism to store items 
 implementing either ICachableItem (a single item) or ICachableSource
 (many items).
@@ -17,9 +16,8 @@ framework to help us manage the complexity.
 Even though, technically, this class can be used outside of ZCA...our examples
 will use ZCA because it helps to simplify the explanation.
 
-================
 Cachable Item
-================
+----------------
 Of course, as a first step, we need some information that is to be cached.
 We need structured information that our SQL Cache Area object can understand.
 We have the ICachableItem interface to help us here.  So as a first step,
@@ -65,9 +63,8 @@ instances of our implementation.
     >>> from zope.component.factory import IFactory, Factory
     >>> myCachableItemFactory = Factory(myItem, 'myCachableItemFactory')
 
-================
 Cached Item
-================
+----------------
 Information that has been cached may require some subtle translations from the
 original information source (ICachableItem).  For example, if the cachable 
 item has a date string then it would be nice to store that information in
@@ -134,9 +131,8 @@ generate new instances of our implementation.
     >>> from zope.component.factory import IFactory, Factory
     >>> myCachedItemFactory = Factory(myCachedItem, 'myCachedItemFactory')
 
-================
 Cached Item Mapper
-================
+-------------------
 Now that we have two different classes, one representing information we want to
 cache and the other representing the information after it has been cached, we need 
 a way to relate the 2 different classes.  For this task, we have the
@@ -186,9 +182,8 @@ class is an implementation of the IManagedCachedItemMapperAttributeKeyWrapper
 interface.  The interface is simple...it needs to supply a __call__() method
 that returns the string key name.
 
-================
 Configuration
-================
+----------------
 We've now created classes that represent information in its pre and post
 cached state, and also a mapper for the two states.  Things are about to get
 interesting.  Before we move forward, we will configure the ZCA registry
@@ -208,9 +203,8 @@ Remember, registration allows these components to be looked up via ZCA calls.
     >>> gsm = getGlobalSiteManager()
     >>> gsm.registerAdapter(myItemCacheMapper, (ICachableSource, IFactory), ICachedItemMapper)
 
-================
 Data Source
-================
+----------------
 Up until now, we've really only dealt with data definitions.  You might be 
 asking..."so where's the data?".  We have the ICachableSource interface to 
 deal with data sources.  But first, we need to start with the actual data.
@@ -238,9 +232,8 @@ Let's run a few quick test to make sure the data source is sane
     '9098328463'
     >>> item.validate()
 
-================
 Database Connection
-================
+----------------
 To work with a database, we need to connect to it per SQLAlchemy instructions.
 We'll use a simple SQLite memory database for this example.
         
@@ -257,9 +250,8 @@ object to enable easy ZCA based component lookup for adapters.
     >>> from sparc.db import ISqlAlchemySession
     >>> directlyProvides(session, ISqlAlchemySession)
 
-================
 Load the Cache!!!
-================
+----------------
 OK, it was a bit complicated to get here...but now we'll see the fruits of 
 our labor.  Our actual caching interface is defined by ICacheArea.  We've
 implemented this interface via an adapter located at
