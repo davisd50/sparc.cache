@@ -22,6 +22,9 @@ setup(name='sparc.cache',
       packages=find_packages(exclude=['ez_setup']),
       namespace_packages=['sparc'],
       include_package_data=True,
+      package_data = {
+          '': ['*.zcml']
+        },
       zip_safe=False,
       install_requires=[
           'setuptools',
