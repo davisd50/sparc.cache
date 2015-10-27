@@ -1,0 +1,12 @@
+sparc.cache
+==========
+
+0.0.2
+++++++++++++++++++
+
+* include zcml configuration files in packaging
+
+0.0.1
+++++++++++++++++++
+
+* initial release
