@@ -7,7 +7,7 @@ import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 
 from sparc.common import ConfigurationRequired
-from sparc.cache import ICacheArea, ICachableSource, ICachableItem, ICachedItem
+from sparc.cache import ICacheArea, ITransactionalCacheArea, ICachableSource, ICachableItem, ICachedItem
 from sparc.cache import ICachedItemMapper, IManagedCachedItemMapperAttribute, IManagedCachedItemMapperAttributeKeyWrapper
 from sparc.db import ISqlAlchemySession
 
@@ -111,7 +111,7 @@ class SqlObjectCacheArea(object):
         
         
     """
-    implements(ICacheArea)
+    implements(ITransactionalCacheArea)
     adapts(ISqlAlchemySession, ICachedItemMapper)
     
     def __init__(self, SqlAlchemySession, CachedItemMapper):

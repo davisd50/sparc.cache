@@ -10,7 +10,7 @@
         - This allows the caching of items to a SQL database back end
     -->
     <adapter
-        provides=".ICacheArea"
+        provides=".ITransactionalCacheArea"
         for="sparc.db.ISqlAlchemySession
              .ICachedItemMapper"
         factory=".sql.SqlObjectCacheArea"

@@ -104,17 +104,20 @@ class ICacheArea(Interface):
     def import_source(ICachableSource):
         """Updates cache area and returns number of items updated with all available entries in ICachableSource"""
     
-    def commit():
-        """Commits changes for transaction capable ICacheAreas"""
-    
-    def rollback():
-        """Rollback changes for transaction capable ICacheAreas"""
-    
     def reset():
         """Deletes all entries in the cache area"""
         
     def initialize():
         """Instantiates the cache area to be ready for updates"""
+
+class ITransactionalCacheArea(ICacheArea):
+    """A Cache area with tranaction capabilities"""
+    
+    def commit():
+        """Commits changes for transaction capable ICacheAreas"""
+    
+    def rollback():
+        """Rollback changes for transaction capable ICacheAreas"""
 
 class ILocatableCacheArea(ICacheArea):
     """
