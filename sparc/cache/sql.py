@@ -9,7 +9,7 @@ import sqlalchemy.ext.declarative
 from sparc.common import ConfigurationRequired
 from sparc.cache import ICacheArea, ITransactionalCacheArea, ICachableSource, ICachableItem, ICachedItem
 from sparc.cache import ICachedItemMapper, IManagedCachedItemMapperAttribute, IManagedCachedItemMapperAttributeKeyWrapper
-from sparc.db import ISqlAlchemySession
+from sparc.db.sql.sa import ISqlAlchemySession
 
 import sparc.common.log
 import logging

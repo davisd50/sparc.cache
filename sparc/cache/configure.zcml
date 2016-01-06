@@ -11,7 +11,7 @@
     -->
     <adapter
         provides=".ITransactionalCacheArea"
-        for="sparc.db.ISqlAlchemySession
+        for="sparc.db.sql.sa.ISqlAlchemySession
              .ICachedItemMapper"
         factory=".sql.SqlObjectCacheArea"
         />

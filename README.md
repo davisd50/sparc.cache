@@ -252,7 +252,7 @@ We need to provide  the ISqlAlchemySession marker interface to the session
 object to enable easy ZCA based component lookup for adapters.
 
     >>> from zope.interface import directlyProvides
-    >>> from sparc.db import ISqlAlchemySession
+    >>> from sparc.db.sql.sa import ISqlAlchemySession
     >>> directlyProvides(session, ISqlAlchemySession)
 
 Load the Cache!!!
