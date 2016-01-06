@@ -9,7 +9,7 @@ import sqlalchemy.ext.declarative
 from sparc.common import ConfigurationRequired
 from sparc.cache import ICacheArea, ITransactionalCacheArea, ICachableSource, ICachableItem, ICachedItem
 from sparc.cache import ICachedItemMapper, IManagedCachedItemMapperAttribute, IManagedCachedItemMapperAttributeKeyWrapper
-from sparc.db.sql.sa import ISqlAlchemySession
+from sparc.db.sql.sa import ISqlAlchemySession, ISqlAlchemyDeclarativeBase
 
 import sparc.common.log
 import logging
@@ -112,11 +112,12 @@ class SqlObjectCacheArea(object):
         
     """
     implements(ITransactionalCacheArea)
-    adapts(ISqlAlchemySession, ICachedItemMapper)
+    adapts(ISqlAlchemyDeclarativeBase, ISqlAlchemySession, ICachedItemMapper)
     
-    def __init__(self, SqlAlchemySession, CachedItemMapper):
+    def __init__(self, SqlAlchemyDeclarativeBase, SqlAlchemySession, CachedItemMapper):
         """Object initialization
         """
+        self.Base = SqlAlchemyDeclarativeBase
         self.session = SqlAlchemySession
         self.mapper = CachedItemMapper
         
@@ -178,12 +179,12 @@ class SqlObjectCacheArea(object):
     def rollback(self):
         self.session.rollback()
     
-    def reset(self, SqlAlchemyBase):
+    def reset(self):
         """Deletes all entries in the cache area"""
-        SqlAlchemyBase.metadata.drop_all(self.session.bind)
+        self.Base.metadata.drop_all(self.session.bind)
         self.initialize()
         
-    def initialize(self, SqlAlchemyBase):
+    def initialize(self):
         """Instantiates the cache area to be ready for updates"""
-        SqlAlchemyBase.metadata.create_all(self.session.bind)
+        self.Base.metadata.create_all(self.session.bind)
         

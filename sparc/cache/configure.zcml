@@ -6,12 +6,13 @@
     <include package=".sources" />
     
     <!--
-    SQLAlchemy Implementation of ICacheArea
+    SQLAlchemy Implementation of ITransactionalCacheArea
         - This allows the caching of items to a SQL database back end
     -->
     <adapter
         provides=".ITransactionalCacheArea"
-        for="sparc.db.sql.sa.ISqlAlchemySession
+        for="sparc.db.sql.sa.ISqlAlchemyDeclarativeBase
+             sparc.db.sql.sa.ISqlAlchemySession
              .ICachedItemMapper"
         factory=".sql.SqlObjectCacheArea"
         />

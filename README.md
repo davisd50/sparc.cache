@@ -21,6 +21,25 @@ framework to help us manage the complexity.
 Even though, technically, this class can be used outside of ZCA...our examples
 will use ZCA because it helps to simplify the explanation.
 
+
+Configuration
+----------------
+Before we start, we need to configure the ZCA registry with some required
+components in sparc.db and sparc.cache.  Later, we'll add some additional
+components into this registry that we create.
+We've now created classes that represent information in its pre and post
+cached state, and also a mapper for the two states.  Things are about to get
+interesting.  Before we move forward, we will configure the ZCA registry
+with both our components above and also components that are available in
+sparc (defined in the various *.zcml files in the framework).
+
+    >>> from sparc.common import Configure
+    >>> import sparc.db
+    >>> import sparc.cache
+    >>> Configure([sparc.db, sparc.cache])
+
+ok, now we're ready to create our own components
+
 Cachable Item
 ----------------
 Of course, as a first step, we need some information that is to be cached.
@@ -90,7 +109,13 @@ interface to do anything useful.
     ...         __mapper_args__= {'always_refresh': True}
     ...     def __repr__(self):
     ...        return "<" + self.__class__.__name__ + "(id: '%s'')>" % (self.getId())
-    >>> Base = sqlalchemy.ext.declarative.declarative_base()
+
+We'll also want to get ahold of a SQL Alchemy ORM Delcatative Base object. 
+We can do this via a singleton utility providing ISqlAlchemyDeclarativeBase.
+
+    >>> from zope.component import getUtility
+    >>> from sparc.db.sql.sa import ISqlAlchemyDeclarativeBase
+    >>> Base = getUtility(ISqlAlchemyDeclarativeBase)
         
     >>> from sparc.cache import ICachedItem
     >>> import sqlalchemy
@@ -124,7 +149,9 @@ have a ready-to-use mixin class to help things out.
 
     >>> del(myCachedItem)
     >>> from sparc.cache.item import cachedItemMixin
+    >>> from zope.interface import alsoProvides
     >>> Base = sqlalchemy.ext.declarative.declarative_base() # we need to reset this, cause myCachedItem is already defined above
+    >>> alsoProvides(Base, ISqlAlchemyDeclarativeBase) # we'll mark it so it can be used in ZCA
     >>> class myCachedItem(cachedItemMixin, myBaseMixin, Base):
     ...     _key = 'entry_number'
     ...     entry_number = sqlalchemy.Column(sqlalchemy.BigInteger(), primary_key=True)
@@ -187,22 +214,12 @@ class is an implementation of the IManagedCachedItemMapperAttributeKeyWrapper
 interface.  The interface is simple...it needs to supply a __call__() method
 that returns the string key name.
 
-Configuration
+Registration
 ----------------
 We've now created classes that represent information in its pre and post
 cached state, and also a mapper for the two states.  Things are about to get
-interesting.  Before we move forward, we will configure the ZCA registry
-with both our components above and also components that are available in
-sparc (defined in the various *.zcml files in the framework).
-
-    >>> from sparc.common import Configure
-    >>> import sparc.cache
-    >>> Configure([sparc.cache])
-
-We now have populated the global ZCA registry with all available components
-in the sparc.cache package.  It's a good start, but we also need to register
-the ICachableItemMapper adapter implementation components above.
-Remember, registration allows these components to be looked up via ZCA calls.
+interesting.  Before we move forward, we'll add the myItemCacheMapper()
+component into the ZCA registry to allow interface-based lookups.
 
     >>> from zope.component import getGlobalSiteManager
     >>> gsm = getGlobalSiteManager()
@@ -258,20 +275,20 @@ object to enable easy ZCA based component lookup for adapters.
 Load the Cache!!!
 ----------------
 OK, it was a bit complicated to get here...but now we'll see the fruits of 
-our labor.  Our actual caching interface is defined by ICacheArea.  We've
-implemented this interface via an adapter located at
+our labor.  Our actual caching interface is defined by ITransactionalCacheArea.  
+We've implemented this interface via an adapter located at
 sparc.cache.sql.SqlObjectCacheArea.  This adapter is already registered, so
 we can look it up.
 
-    >>> from sparc.cache import ICacheArea
+    >>> from sparc.cache import ITransactionalCacheArea
     >>> from zope.component import getMultiAdapter
     >>> myMapper = getMultiAdapter((myCSVSource, myCachedItemFactory), ICachedItemMapper) # get our mapper via our adapter implementation
-    >>> mySqlObjectCacheArea = getMultiAdapter((session, myMapper), ICacheArea)
+    >>> mySqlObjectCacheArea = getMultiAdapter((Base, session, myMapper), ITransactionalCacheArea)
 
 One more final activity...we need to initialize (i.e. create the DB tables) 
 the storage area.
 
-    >>> mySqlObjectCacheArea.initialize(Base)
+    >>> mySqlObjectCacheArea.initialize()
 
 whew...that was a lot of work...now we can finally use it.  let's start
 by getting one of our cachable items in hand.
