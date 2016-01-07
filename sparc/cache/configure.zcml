@@ -15,6 +15,7 @@
              sparc.db.sql.sa.ISqlAlchemySession
              .ICachedItemMapper"
         factory=".sql.SqlObjectCacheArea"
+        name="sparc.cache.sqlalchemy_cache"
         />
     <!--
     Utility to perform ICachedItemMapper subscriber lookups based on a given
