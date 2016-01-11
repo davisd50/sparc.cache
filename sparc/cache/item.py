@@ -3,12 +3,19 @@ import inspect
 from zope.interface import implements
 from zope.component import subscribers
 from zope.component.interfaces import IFactory
+from zope.schema import getFieldNames
 from sparc.cache import ICachableItem, ICachedItem, IAgeableCachedItem, ICachedItemMapper
 
 import sparc.common.log
 import logging
 logger = logging.getLogger('sparc.cache.item')
 
+def schema_map(schema):
+    """Return a valid ICachedItemMapper.map for schema"""
+    mapper = {}
+    for name in getFieldNames(schema):
+        mapper[name] = name
+    return mapper
 
 class CachedItemMapperFactory(object):
     implements(IFactory)
