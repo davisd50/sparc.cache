@@ -278,7 +278,7 @@ we can look it up.
     >>> from sparc.cache import ITransactionalCacheArea
     >>> from zope.component import getMultiAdapter
     >>> myMapper = getMultiAdapter((myCSVSource, myCachedItemFactory), ICachedItemMapper) # get our mapper via our adapter implementation
-    >>> mySqlObjectCacheArea = getMultiAdapter((Base, session, myMapper), ITransactionalCacheArea)
+    >>> mySqlObjectCacheArea = getMultiAdapter((Base, session, myMapper), ITransactionalCacheArea, name="sparc.cache.sqlalchemy_cache")
 
 One more final activity...we need to initialize (i.e. create the DB tables) 
 the storage area.

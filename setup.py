@@ -34,6 +34,8 @@ setup(name='sparc.cache',
       install_requires=[
           'setuptools',
           'SQLAlchemy',
+          'zope.event',
+          'zope.lifecycleevent',
           'sparc.common',
           'sparc.db'
           # -*- Extra requirements: -*-

@@ -1,6 +1,8 @@
 from zope.interface import Interface, implements
 from zope.component.factory import IFactory
 from zope.component import adapts, queryAdapter
+from zope.event import notify
+from zope.lifecycleevent import ObjectCreatedEvent, ObjectModifiedEvent
 from sqlalchemy.orm import Session
 from datetime import date
 import sqlalchemy.orm
@@ -159,10 +161,20 @@ class SqlObjectCacheArea(object):
     def cache(self, CachableItem):
         """Updates cache area with latest information
         """
-        if self.isDirty(CachableItem):
+        _cachedItem = self.get(CachableItem)
+        if not _cachedItem:
             _dirtyCachedItem = self.mapper.get(CachableItem)
-            logger.debug("cached item required sql cache area update {id: %s, type: %s}", str(_dirtyCachedItem.getId()), str(_dirtyCachedItem.__class__))
-            return self.session.merge(_dirtyCachedItem)
+            logger.debug("new cachable item added to sql cache area {id: %s, type: %s}", str(_dirtyCachedItem.getId()), str(_dirtyCachedItem.__class__))
+            cached_item = self.session.merge(_dirtyCachedItem)
+            notify(ObjectCreatedEvent(cached_item))
+            return cached_item
+        else:
+            _newCacheItem = self.mapper.get(CachableItem)
+            if _cachedItem != _newCacheItem:
+                logger.debug("Cachable item modified in sql cache area {id: %s, type: %s}", str(_newCacheItem.getId()), str(_newCacheItem.__class__))
+                cached_item = self.session.merge(_newCacheItem)
+                notify(ObjectModifiedEvent(cached_item))
+                return cached_item
         return False
     
     def import_source(self, CachableSource):

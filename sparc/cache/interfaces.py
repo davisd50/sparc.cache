@@ -99,10 +99,17 @@ class ICacheArea(Interface):
         """True if cached information requires update for ICachableItem"""
     
     def cache(ICachableItem):
-        """Updates caches area with latest item information returning ICachedItem if cache updates were required"""
+        """Updates caches area with latest item information returning 
+           ICachedItem if cache updates were required.
+           
+           Issues IObjectCreatedEvent, and IObjectModifiedEvent for 
+           ICachableItem from zope.lifecycleevent for corresponding events.
+        """
     
     def import_source(ICachableSource):
-        """Updates cache area and returns number of items updated with all available entries in ICachableSource"""
+        """Updates cache area and returns number of items updated with all 
+           available entries in ICachableSource
+        """
     
     def reset():
         """Deletes all entries in the cache area"""
