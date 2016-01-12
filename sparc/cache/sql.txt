@@ -226,13 +226,19 @@ the use of the adapter decorator
 
     >>> from zope.component import adapter
     >>> from zope.lifecycleevent import IObjectCreatedEvent, IObjectModifiedEvent
-    >>> @adapter(IObjectCreatedEvent)
-    ... def new_item_subscriber(event):
-    ...     event.object._ive_been_updated_by_the_new_item_subscription = True
+    >>> @adapter(ICachedItem, IObjectCreatedEvent)
+    ... def new_item_subscriber(item, event):
+    ...     item._ive_been_updated_by_the_new_item_subscription = True
 
-    >>> @adapter(IObjectModifiedEvent)
-    ... def modified_item_subscriber(event):
-    ...     event.object._ive_been_updated_by_the_modified_item_subscription = True
+    >>> @adapter(ICachedItem, IObjectModifiedEvent)
+    ... def modified_item_subscriber(item, event):
+    ...     item._ive_been_updated_by_the_modified_item_subscription = True
+
+The above subscribers leverage the zope.component.event object 
+subscribers, which allows an item type plus the event for subscriber
+filtering.  In practice, you may want your ICachedItem class to also
+implement some non-generic interface which you then could apply as a 
+subscription filter inlieu of the ICachedItem specification above.
 
 Registration
 ----------------
