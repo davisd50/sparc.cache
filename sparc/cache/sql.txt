@@ -209,16 +209,55 @@ class is an implementation of the IManagedCachedItemMapperAttributeKeyWrapper
 interface.  The interface is simple...it needs to supply a __call__() method
 that returns the string key name.
 
+Cached Item Events
+-------------------
+Usually, when leveraging the sparc caching system there is an underlying
+reason to do so.  What I mean is that it is often required to act on the
+information that is being cached.  Of course, the information can always be
+searched from the cache but it would be nice if we could act on the information
+as it is actively being cached.  For this, the ICacheArea interface indicates
+events (see zope.event) will be issued for item additions and
+modifications (see zope.lifecycleevent) in the cache area.  We'll illustrate
+how to leverage these events using subscription adapters.
+
+subscription adapters are Python callables, typically a function.  We'll
+implement some simple subscriptions to illustrate the concepts.  Notice
+the use of the adapter decorator
+
+    >>> from zope.component import adapter
+    >>> from zope.lifecycleevent import IObjectCreatedEvent, IObjectModifiedEvent
+    >>> @adapter(IObjectCreatedEvent)
+    ... def new_item_subscriber(event):
+    ...     event.object._ive_been_updated_by_the_new_item_subscription = True
+
+    >>> @adapter(IObjectModifiedEvent)
+    ... def modified_item_subscriber(event):
+    ...     event.object._ive_been_updated_by_the_modified_item_subscription = True
+
 Registration
 ----------------
 We've now created classes that represent information in its pre and post
-cached state, and also a mapper for the two states.  Things are about to get
-interesting.  Before we move forward, we'll add the myItemCacheMapper()
-component into the ZCA registry to allow interface-based lookups.
+cached state, and also a mapper for the two states.  In addition, we created
+two subscribers that make updates during addition and modifications.  Things 
+are about to get interesting.  Before we move forward, we'll add the 
+myItemCacheMapper() component into the ZCA registry to allow interface-based 
+lookups.
 
     >>> from zope.component import getGlobalSiteManager
     >>> gsm = getGlobalSiteManager()
     >>> gsm.registerAdapter(myItemCacheMapper, (ICachableSource, IFactory), ICachedItemMapper)
+
+We also need to registeer our two subscribers
+
+    >>> from zope.component import provideHandler
+    >>> provideHandler(new_item_subscriber)
+    >>> provideHandler(modified_item_subscriber)
+
+Finally, we need to make sure that zope.component.event is imported.  This
+import insures some important registrations occur to allow the event system
+to broadcast events to handlers.
+
+   >>> import zope.component.event
 
 Data Source
 ----------------
@@ -303,6 +342,8 @@ This item hasn't been cached yet
     >>> mySqlObjectCacheArea.isDirty(item)
     True
     >>> cached = mySqlObjectCacheArea.cache(item)
+    >>> cached._ive_been_updated_by_the_new_item_subscription
+    True
     >>> cached.getId()
     9098328463
     >>> mySqlObjectCacheArea.isDirty(item)
@@ -314,6 +355,9 @@ This item hasn't been cached yet
     False
     >>> item.attributes['LOGGED DATE'] = '6/25/2014 16:28' # new date
     >>> mySqlObjectCacheArea.isDirty(item)
+    True
+    >>> cached = mySqlObjectCacheArea.cache(item)
+    >>> cached._ive_been_updated_by_the_modified_item_subscription
     True
     >>> myMapper.get(item).getId()
     9098328463
