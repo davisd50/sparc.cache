@@ -8,7 +8,7 @@ from datetime import date
 import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 
-from sparc.common import ConfigurationRequired
+from sparc.configuration.zcml import ConfigurationRequired
 from sparc.cache import ICacheArea, ITransactionalCacheArea, ICachableSource, ICachableItem, ICachedItem
 from sparc.cache import ICachedItemMapper, IManagedCachedItemMapperAttribute, IManagedCachedItemMapperAttributeKeyWrapper
 from sparc.db.sql.sa import ISqlAlchemySession, ISqlAlchemyDeclarativeBase
