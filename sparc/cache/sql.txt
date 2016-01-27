@@ -28,7 +28,7 @@ interesting.  Before we move forward, we will configure the ZCA registry
 with both our components above and also components that are available in
 sparc (defined in the various *.zcml files in the framework).
 
-    >>> from sparc.common import Configure
+    >>> from sparc.configuration.zcml import Configure
     >>> import sparc.db
     >>> import sparc.cache
     >>> Configure([sparc.db, sparc.cache])
