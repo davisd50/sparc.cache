@@ -2,7 +2,6 @@ from zope.interface import Interface, implements
 from zope.component.factory import IFactory
 from zope.component import adapts, queryAdapter
 from zope.event import notify
-from zope.lifecycleevent import ObjectCreatedEvent, ObjectModifiedEvent
 from sqlalchemy.orm import Session
 from datetime import date
 import sqlalchemy.orm
@@ -11,6 +10,7 @@ import sqlalchemy.ext.declarative
 from sparc.configuration.zcml import ConfigurationRequired
 from sparc.cache import ICacheArea, ITransactionalCacheArea, ICachableSource, ICachableItem, ICachedItem
 from sparc.cache import ICachedItemMapper, IManagedCachedItemMapperAttribute, IManagedCachedItemMapperAttributeKeyWrapper
+from sparc.cache.events import CacheObjectCreatedEvent, CacheObjectModifiedEvent
 from sparc.db.sql.sa import ISqlAlchemySession, ISqlAlchemyDeclarativeBase
 
 import sparc.common.log
@@ -166,14 +166,14 @@ class SqlObjectCacheArea(object):
             _dirtyCachedItem = self.mapper.get(CachableItem)
             logger.debug("new cachable item added to sql cache area {id: %s, type: %s}", str(_dirtyCachedItem.getId()), str(_dirtyCachedItem.__class__))
             cached_item = self.session.merge(_dirtyCachedItem)
-            notify(ObjectCreatedEvent(cached_item))
+            notify(CacheObjectCreatedEvent(cached_item, self))
             return cached_item
         else:
             _newCacheItem = self.mapper.get(CachableItem)
             if _cachedItem != _newCacheItem:
                 logger.debug("Cachable item modified in sql cache area {id: %s, type: %s}", str(_newCacheItem.getId()), str(_newCacheItem.__class__))
                 cached_item = self.session.merge(_newCacheItem)
-                notify(ObjectModifiedEvent(cached_item))
+                notify(CacheObjectModifiedEvent(cached_item, self))
                 return cached_item
         return False
     

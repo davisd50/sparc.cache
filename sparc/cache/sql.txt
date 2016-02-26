@@ -240,6 +240,12 @@ filtering.  In practice, you may want your ICachedItem class to also
 implement some non-generic interface which you then could apply as a 
 subscription filter inlieu of the ICachedItem specification above.
 
+One final note, The implementations of IObjectCreatedEvent and 
+IObjectModifiedEvent will also implement 
+sparc.cache.events.ICacheObjectCreatedEvent and
+sparc.cache.events.ICacheObjectModifiedEvent.  This allows the subscription
+consumers to act on the realted ICacheArea if needed.
+
 Registration
 ----------------
 We've now created classes that represent information in its pre and post

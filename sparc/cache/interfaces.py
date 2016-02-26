@@ -102,8 +102,8 @@ class ICacheArea(Interface):
         """Updates caches area with latest item information returning 
            ICachedItem if cache updates were required.
            
-           Issues IObjectCreatedEvent, and IObjectModifiedEvent for 
-           ICachableItem from zope.lifecycleevent for corresponding events.
+           Issues ICacheObjectCreatedEvent, and ICacheObjectModifiedEvent for 
+           ICacheArea/ICachableItem combo.
         """
     
     def import_source(ICachableSource):
