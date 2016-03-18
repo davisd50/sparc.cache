@@ -17,24 +17,6 @@ Even though, technically, this class can be used outside of ZCA...our examples
 will use ZCA because it helps to simplify the explanation.
 
 
-Configuration
-----------------
-Before we start, we need to configure the ZCA registry with some required
-components in sparc.db and sparc.cache.  Later, we'll add some additional
-components into this registry that we create.
-We've now created classes that represent information in its pre and post
-cached state, and also a mapper for the two states.  Things are about to get
-interesting.  Before we move forward, we will configure the ZCA registry
-with both our components above and also components that are available in
-sparc (defined in the various *.zcml files in the framework).
-
-    >>> from sparc.configuration.zcml import Configure
-    >>> import sparc.db
-    >>> import sparc.cache
-    >>> Configure([sparc.db, sparc.cache])
-
-ok, now we're ready to create our own components
-
 Cachable Item
 ----------------
 Of course, as a first step, we need some information that is to be cached.

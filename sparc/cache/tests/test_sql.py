@@ -1,15 +1,11 @@
-"""Test
-"""
 import unittest
-from doctest import DocTestSuite
-from doctest import DocFileSuite
+from sparc.testing.fixture import test_suite_mixin
 
-import sparc.cache
 
-def test_suite():
-    return unittest.TestSuite((
-        DocFileSuite('sql.txt',
-                     package=sparc.cache),))
+class test_suite(test_suite_mixin):
+    package = 'sparc.cache'
+    module = 'sql'
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')
