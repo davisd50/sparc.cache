@@ -1,14 +1,16 @@
-"""Test
-"""
-import unittest
-from doctest import DocFileSuite
+import os
+import zope.testrunner
+from sparc.testing.fixture import test_suite_mixin
 
-import sparc.cache.sources
 
-def test_suite():
-    return unittest.TestSuite((
-        DocFileSuite('csvdata.txt',
-                     package=sparc.cache.sources),))
+class test_suite(test_suite_mixin):
+    package = 'sparc.cache.sources'
+    module = 'csvdata'
+
 
 if __name__ == '__main__':
-    unittest.main(defaultTest='test_suite')
+    zope.testrunner.run([
+                         '--path', os.path.dirname(__file__),
+                         '--tests-pattern', os.path.splitext(
+                                                os.path.basename(__file__))[0]
+                         ])
