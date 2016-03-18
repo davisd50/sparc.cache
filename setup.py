@@ -40,6 +40,9 @@ setup(name='sparc.cache',
           'sparc.db'
           # -*- Extra requirements: -*-
       ],
+      tests_require=[
+          'sparc.testing'
+      ],
       entry_points="""
       # -*- Entry points: -*-
       """,
