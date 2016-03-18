@@ -203,9 +203,9 @@ cached state, and also a mapper for the two states.  Things are about to get
 interesting.  Before we move forward, we'll add the myItemCacheMapper()
 component into the ZCA registry to allow interface-based lookups.
 
-    >>> from zope.component import getGlobalSiteManager
-    >>> gsm = getGlobalSiteManager()
-    >>> gsm.registerAdapter(myItemCacheMapper, (ICachableSource, IFactory), ICachedItemMapper)
+    >>> from zope.component import getSiteManager
+    >>> sm = getSiteManager()
+    >>> sm.registerAdapter(myItemCacheMapper, (ICachableSource, IFactory), ICachedItemMapper)
 
 Data Source
 ----------------
