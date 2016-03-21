@@ -186,26 +186,82 @@ to read/write
     >>> del(myItemCacheMapper)
     >>> from sparc.cache.sql import SqlObjectMapperMixin
     >>> class myItemCacheMapper(SqlObjectMapperMixin):
+    ...     implements(ICachedItemMapper)
     ...     mapper = {
     ...            'entry_number'   :'ENTRY #', 
     ...            'logged_date'    :normalizedDateTime('LOGGED DATE')
     ...           }
+    ...     _key = 'entry_number'
 
 Much nicer to look at.  Also note the normalizedDateTime() reference.  This
 class is an implementation of the IManagedCachedItemMapperAttributeKeyWrapper
 interface.  The interface is simple...it needs to supply a __call__() method
 that returns the string key name.
 
+We need to create a factory for this implementation
+>>> myItemCacheMapperFactory = Factory(myItemCacheMapper)
+
+Cached Item Events
+-------------------
+Usually, when leveraging the sparc caching system there is an underlying
+reason to do so.  What I mean is that it is often required to act on the
+information that is being cached.  Of course, the information can always be
+searched from the cache but it would be nice if we could act on the information
+as it is actively being cached.  For this, the ICacheArea interface indicates
+events (see zope.event) will be issued for item additions and
+modifications (see zope.lifecycleevent) in the cache area.  We'll illustrate
+how to leverage these events using subscription adapters.
+
+subscription adapters are Python callables, typically a function.  We'll
+implement some simple subscriptions to illustrate the concepts.  Notice
+the use of the adapter decorator
+
+    >>> from zope.component import adapter
+    >>> from zope.lifecycleevent import IObjectCreatedEvent, IObjectModifiedEvent
+    >>> @adapter(ICachedItem, IObjectCreatedEvent)
+    ... def new_item_subscriber(item, event):
+    ...     item._ive_been_updated_by_the_new_item_subscription = True
+
+    >>> @adapter(ICachedItem, IObjectModifiedEvent)
+    ... def modified_item_subscriber(item, event):
+    ...     item._ive_been_updated_by_the_modified_item_subscription = True
+
+The above subscribers leverage the zope.component.event object 
+subscribers, which allows an item type plus the event for subscriber
+filtering.  In practice, you may want your ICachedItem class to also
+implement some non-generic interface which you then could apply as a 
+subscription filter inlieu of the ICachedItem specification above.
+
+One final note, The implementations of IObjectCreatedEvent and 
+IObjectModifiedEvent will also implement 
+sparc.cache.events.ICacheObjectCreatedEvent and
+sparc.cache.events.ICacheObjectModifiedEvent.  This allows the subscription
+consumers to act on the realted ICacheArea if needed.
+
 Registration
 ----------------
 We've now created classes that represent information in its pre and post
-cached state, and also a mapper for the two states.  Things are about to get
-interesting.  Before we move forward, we'll add the myItemCacheMapper()
-component into the ZCA registry to allow interface-based lookups.
+cached state, and also a mapper for the two states.  In addition, we created
+two subscribers that make updates during addition and modifications.  Things 
+are about to get interesting.  Before we move forward, we'll add the 
+myItemCacheMapper() component into the ZCA registry to allow interface-based 
+lookups.
 
     >>> from zope.component import getSiteManager
     >>> sm = getSiteManager()
-    >>> sm.registerAdapter(myItemCacheMapper, (ICachableSource, IFactory), ICachedItemMapper)
+    >>> sm.registerUtility(myItemCacheMapperFactory, name=u'item_mapper')
+
+We also need to registeer our two subscribers
+
+    >>> from zope.component import provideHandler
+    >>> provideHandler(new_item_subscriber)
+    >>> provideHandler(modified_item_subscriber)
+
+Finally, we need to make sure that zope.component.event is imported.  This
+import insures some important registrations occur to allow the event system
+to broadcast events to handlers.
+
+   >>> import zope.component.event
 
 Data Source
 ----------------
@@ -264,8 +320,8 @@ we can look it up.
 
     >>> from sparc.cache import ITransactionalCacheArea
     >>> from zope.component import getMultiAdapter
-    >>> myMapper = getMultiAdapter((myCSVSource, myCachedItemFactory), ICachedItemMapper) # get our mapper via our adapter implementation
-    >>> mySqlObjectCacheArea = getMultiAdapter((Base, session, myMapper), ITransactionalCacheArea)
+    >>> myMapper = createObject(u'item_mapper', myCachedItemFactory) # get our mapper via our factory implementation
+    >>> mySqlObjectCacheArea = getMultiAdapter((Base, session, myMapper), ITransactionalCacheArea, name="sparc.cache.sqlalchemy_cache")
 
 One more final activity...we need to initialize (i.e. create the DB tables) 
 the storage area.
@@ -290,6 +346,8 @@ This item hasn't been cached yet
     >>> mySqlObjectCacheArea.isDirty(item)
     True
     >>> cached = mySqlObjectCacheArea.cache(item)
+    >>> cached._ive_been_updated_by_the_new_item_subscription
+    True
     >>> cached.getId()
     9098328463
     >>> mySqlObjectCacheArea.isDirty(item)
@@ -301,6 +359,9 @@ This item hasn't been cached yet
     False
     >>> item.attributes['LOGGED DATE'] = '6/25/2014 16:28' # new date
     >>> mySqlObjectCacheArea.isDirty(item)
+    True
+    >>> cached = mySqlObjectCacheArea.cache(item)
+    >>> cached._ive_been_updated_by_the_modified_item_subscription
     True
     >>> myMapper.get(item).getId()
     9098328463

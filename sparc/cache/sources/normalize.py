@@ -11,8 +11,9 @@ from sparc.cache.sql import SqlObjectMapperMixin
 class normalizedFieldNameSqlObjectMapperMixin(SqlObjectMapperMixin):
     """Base class for normalized field name ICachedItemMapper implementations
     """
+    #implements(ICachedItemMapper)
     
-    def __init__(self, myCachableSource, myCachedItemFactory):
+    def __init__(self, *args, **kwargs):
         _new_mapper = {}
         for mapper, attribute in self.mapper.iteritems():
             if IManagedCachedItemMapperAttributeKeyWrapper.providedBy(attribute): # managed attributes
@@ -21,7 +22,7 @@ class normalizedFieldNameSqlObjectMapperMixin(SqlObjectMapperMixin):
             else:
                 _new_mapper[mapper] = normalizedFieldNameCachableItemMixin.normalize(attribute) # unmanaged attribute
         self.mapper = _new_mapper
-        super(normalizedFieldNameSqlObjectMapperMixin, self).__init__(myCachableSource, myCachedItemFactory)
+        super(normalizedFieldNameSqlObjectMapperMixin, self).__init__(*args, **kwargs)
 
 class normalizedFieldNameCachableItemMixin(cachableItemMixin):
     """Base class for ICachableItem implementations for data requiring normalized field names.

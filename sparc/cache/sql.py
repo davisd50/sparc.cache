@@ -24,28 +24,21 @@ class SqlObjectMapperMixin(object):
     ICachedItemMapper.  This class implements a get method that will automatically
     convert DATE, INT, and UNICODE type fields into the corresponding Python
     Types.
-    
-    This class has a dependency on component configuration.
     """
     
-    implements(ICachedItemMapper)
-    adapts(ICachableSource, IFactory) #subscription
+    #implements(ICachedItemMapper)
     mapper = {}
+    _key = 'key_name_for_ICachedItem' # implementers to define this
     
-    @ConfigurationRequired
-    def __init__(self, myCachableSource, myCachedItemFactory):
+    def __init__(self, myCachedItemFactory):
         """
         Args:
             myCachableSource: 
         """
-        self.myCachableSource = myCachableSource
         self.myCachedItemFactory = myCachedItemFactory
     
     def key(self):
-        for _key, _value in self.mapper.iteritems():
-            if _value == self.myCachableSource.key():
-                return _key
-        raise LookupError("expected to find matching cache key for given source key via map lookup")
+        return self._key
     
     def factory(self):
         return self.myCachedItemFactory()

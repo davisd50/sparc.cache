@@ -181,15 +181,20 @@ to read/write
     >>> del(myItemCacheMapper)
     >>> from sparc.cache.sql import SqlObjectMapperMixin
     >>> class myItemCacheMapper(SqlObjectMapperMixin):
+    ...     implements(ICachedItemMapper)
     ...     mapper = {
     ...            'entry_number'   :'ENTRY #', 
     ...            'logged_date'    :normalizedDateTime('LOGGED DATE')
     ...           }
+    ...     _key = 'entry_number'
 
 Much nicer to look at.  Also note the normalizedDateTime() reference.  This
 class is an implementation of the IManagedCachedItemMapperAttributeKeyWrapper
 interface.  The interface is simple...it needs to supply a __call__() method
 that returns the string key name.
+
+We need to create a factory for this implementation
+>>> myItemCacheMapperFactory = Factory(myItemCacheMapper)
 
 Cached Item Events
 -------------------
@@ -239,7 +244,7 @@ lookups.
 
     >>> from zope.component import getSiteManager
     >>> sm = getSiteManager()
-    >>> sm.registerAdapter(myItemCacheMapper, (ICachableSource, IFactory), ICachedItemMapper)
+    >>> sm.registerUtility(myItemCacheMapperFactory, name=u'item_mapper')
 
 We also need to registeer our two subscribers
 
@@ -310,7 +315,7 @@ we can look it up.
 
     >>> from sparc.cache import ITransactionalCacheArea
     >>> from zope.component import getMultiAdapter
-    >>> myMapper = getMultiAdapter((myCSVSource, myCachedItemFactory), ICachedItemMapper) # get our mapper via our adapter implementation
+    >>> myMapper = createObject(u'item_mapper', myCachedItemFactory) # get our mapper via our factory implementation
     >>> mySqlObjectCacheArea = getMultiAdapter((Base, session, myMapper), ITransactionalCacheArea, name="sparc.cache.sqlalchemy_cache")
 
 One more final activity...we need to initialize (i.e. create the DB tables) 
