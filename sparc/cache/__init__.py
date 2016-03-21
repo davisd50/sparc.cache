@@ -10,5 +10,3 @@ from sparc.cache.interfaces import ICachableSource
 from sparc.cache.interfaces import ICacheArea
 from sparc.cache.interfaces import ITransactionalCacheArea
 from sparc.cache.interfaces import ILocatableCacheArea
-
-from sparc.cache.sql import ICachedItemMapperSqlCompatible

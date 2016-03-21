@@ -17,9 +17,6 @@ import sparc.common.log
 import logging
 logger = logging.getLogger('sparc.cache.sql')
 
-class ICachedItemMapperSqlCompatible(Interface):
-    """Marker interface for ICachedItemMapper implementations that indicates compatibility with SQL-based ICacheArea"""
-
 class SqlObjectMapperMixin(object):
     """Base class for ICachedItemMapper implementations
     
@@ -31,7 +28,7 @@ class SqlObjectMapperMixin(object):
     This class has a dependency on component configuration.
     """
     
-    implements(ICachedItemMapper, ICachedItemMapperSqlCompatible)
+    implements(ICachedItemMapper)
     adapts(ICachableSource, IFactory) #subscription
     mapper = {}
     
