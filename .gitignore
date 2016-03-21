@@ -54,10 +54,14 @@ docs/_build/
 target/
 
 # Eclipse Files
-.project
-.pydevproject
+#.project
+#.pydevproject
+.settings
 
 # Buildout Directories and files
 bin/
 src/
 .mr.developer.cfg
+
+# Apple
+.DS_store
