@@ -13,9 +13,8 @@ from sparc.cache import ICachedItemMapper, IManagedCachedItemMapperAttribute, IM
 from sparc.cache.events import CacheObjectCreatedEvent, CacheObjectModifiedEvent
 from sparc.db.sql.sa import ISqlAlchemySession, ISqlAlchemyDeclarativeBase
 
-import sparc.common.log
-import logging
-logger = logging.getLogger('sparc.cache.sql')
+from sparc.logging import logging
+logger = logging.getLogger(__name__)
 
 class SqlObjectMapperMixin(object):
     """Base class for ICachedItemMapper implementations

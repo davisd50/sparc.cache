@@ -5,9 +5,8 @@ from csv import DictReader
 
 from sparc.cache.interfaces import ICachableSource
 
-import sparc.common.log
-import logging
-logger = logging.getLogger('sparc.cache.sources.csvdata')
+from sparc.logging import logging
+logger = logging.getLogger(__name__)
 
 class CSVSource(object):
     

@@ -6,9 +6,8 @@ from zope.component.interfaces import IFactory
 from zope.schema import getFieldNames
 from sparc.cache import ICachableItem, ICachedItem, IAgeableCachedItem, ICachedItemMapper
 
-import sparc.common.log
-import logging
-logger = logging.getLogger('sparc.cache.item')
+from sparc.logging import logging
+logger = logging.getLogger(__name__)
 
 def schema_map(schema):
     """Return a valid ICachedItemMapper.map for schema"""
