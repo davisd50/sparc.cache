@@ -231,7 +231,7 @@ One final note, The implementations of IObjectCreatedEvent and
 IObjectModifiedEvent will also implement 
 sparc.cache.events.ICacheObjectCreatedEvent and
 sparc.cache.events.ICacheObjectModifiedEvent.  This allows the subscription
-consumers to act on the realted ICacheArea if needed.
+consumers to act on the related ICacheArea if needed.
 
 Registration
 ----------------
