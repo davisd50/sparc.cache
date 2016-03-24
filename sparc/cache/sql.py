@@ -69,7 +69,7 @@ class SqlObjectMapperMixin(object):
                     _cachedAttrValue_new = int(_sourceAttrValue)
                 except ValueError:
                     _cachedAttrValue_new = None
-            elif 'CHAR' in _sql_field_type_name.upper():
+            elif 'NCHAR' in _sql_field_type_name.upper():
                 _cachedAttrValue_new = _sourceAttrValue.decode('utf8', 'replace') if _sourceAttrValue else None
             else:
                 _cachedAttrValue_new = _sourceAttrValue
