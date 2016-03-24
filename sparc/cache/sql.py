@@ -43,6 +43,7 @@ class SqlObjectMapperMixin(object):
         return self.myCachedItemFactory()
     
     def get(self, sourceItem):
+        #TODO: take a serious look at this implementation...seems very holy (not in a religous sort of way)
         _cachedItem = self.factory()
         #_sqlInspecter = sqlalchemy.inspection.inspect(_cachedItem)
         for _cachedAttrKeyName in _cachedItem.__class__.__dict__.keys(): # iterate the actual cache object to make sure we don't miss any attributes
@@ -68,8 +69,10 @@ class SqlObjectMapperMixin(object):
                     _cachedAttrValue_new = int(_sourceAttrValue)
                 except ValueError:
                     _cachedAttrValue_new = None
-            else:
+            elif 'CHAR' in _sql_field_type_name.upper():
                 _cachedAttrValue_new = _sourceAttrValue.decode('utf8', 'replace') if _sourceAttrValue else None
+            else:
+                _cachedAttrValue_new = _sourceAttrValue
             
             _cachedItem.__dict__[_cachedAttrKeyName] = _cachedAttrValue_new
         logger.debug("generated cached item from source, values: %s", str(_cachedItem.getId()))
@@ -188,4 +191,5 @@ class SqlObjectCacheArea(object):
     def initialize(self):
         """Instantiates the cache area to be ready for updates"""
         self.Base.metadata.create_all(self.session.bind)
+        logger.debug("initialized sqlalchemy orm tables")
         
