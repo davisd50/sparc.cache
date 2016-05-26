@@ -261,7 +261,7 @@ Finally, we need to make sure that zope.component.event is imported.  This
 import insures some important registrations occur to allow the event system
 to broadcast events to handlers.
 
-   >>> import zope.component.event
+    >>> import zope.component.event
 
 Data Source
 ----------------
@@ -306,9 +306,9 @@ We'll use a simple SQLite memory database for this example.
 We need to provide  the ISqlAlchemySession marker interface to the session 
 object to enable easy ZCA based component lookup for adapters.
 
-    >>> from zope.interface import directlyProvides
+    >>> from zope.interface import alsoProvides
     >>> from sparc.db.sql.sa import ISqlAlchemySession
-    >>> directlyProvides(session, ISqlAlchemySession)
+    >>> alsoProvides(session, ISqlAlchemySession)
 
 Load the Cache!!!
 ----------------

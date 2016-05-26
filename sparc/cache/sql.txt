@@ -1,3 +1,8 @@
+sparc.cache
+===========
+
+Data caching components for the SPARC platform.
+
 SQL Cache Area
 ----------------
 SQL implementation of ICacheArea, providing a mechanism to store items 
@@ -231,7 +236,7 @@ One final note, The implementations of IObjectCreatedEvent and
 IObjectModifiedEvent will also implement 
 sparc.cache.events.ICacheObjectCreatedEvent and
 sparc.cache.events.ICacheObjectModifiedEvent.  This allows the subscription
-consumers to act on the related ICacheArea if needed.
+consumers to act on the realted ICacheArea if needed.
 
 Registration
 ----------------
@@ -256,7 +261,7 @@ Finally, we need to make sure that zope.component.event is imported.  This
 import insures some important registrations occur to allow the event system
 to broadcast events to handlers.
 
-   >>> import zope.component.event
+    >>> import zope.component.event
 
 Data Source
 ----------------
@@ -301,9 +306,9 @@ We'll use a simple SQLite memory database for this example.
 We need to provide  the ISqlAlchemySession marker interface to the session 
 object to enable easy ZCA based component lookup for adapters.
 
-    >>> from zope.interface import directlyProvides
+    >>> from zope.interface import alsoProvides
     >>> from sparc.db.sql.sa import ISqlAlchemySession
-    >>> directlyProvides(session, ISqlAlchemySession)
+    >>> alsoProvides(session, ISqlAlchemySession)
 
 Load the Cache!!!
 ----------------
