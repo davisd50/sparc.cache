@@ -1,0 +1,22 @@
+ICachableItem adapter for Sparc Entities
+=========================================
+
+This simple adapter converts the standard sparc.entity.IEntity fields into
+a ICachableItem
+
+>>> from zope.component import createObject
+>>> my_entity_details = {
+... 			'id': '12345',
+...				'name': u'A name',
+...				'description': u'A description',
+...				'details': u'Some details'
+...				}
+>>> my_entity = createObject(u'sparc.entity.entity', **my_entity_details)
+
+Now, we can adapt this object into a cachable item and check its attributes
+>>> from sparc.cache import ICachableItem
+>>> ci = ICachableItem(my_entity)
+>>> ci.getId() == my_entity.id
+True
+>>> ci.attributes['name'] == u'A name'
+True

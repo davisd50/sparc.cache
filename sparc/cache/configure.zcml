@@ -25,4 +25,9 @@
         factory=".item.CachedItemMapperFactory"
         name="sparc.cache.CachedItemMapperFactory"
         />
+    <adapter
+        provides=".ICachableItem"
+        for="sparc.entity.IEntity"
+        factory=".entity.CachableItemForEntity"
+        />
 </configure>
