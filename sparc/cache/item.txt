@@ -1,0 +1,51 @@
+Simple Item Mapper
+===================
+It can be a tedious exercise to create ICachedItemMapper and ICachedItem
+implementations for simple things.  Lets say you've created a ICachableItem
+implementation where you simply want a ICachedItem version of that with
+one-to-one attribute mappings.
+
+In this simple case, you can leverage the sparc.cache.simple_item_mapper
+factory utility.
+
+First create some simple ICachableItem implementation/instance.
+>>> from sparc.cache.item import cachableItemMixin as CachableItem
+>>> cachable_item = CachableItem('id', {'id': '1', 'color': 'blue'})
+
+Using our utility, we can get a ICachedItemMapper instance that produces
+ICachedItem instances.
+>>> from zope.component import createObject
+>>> mapper = createObject(u'sparc.cache.simple_item_mapper', 'id', cachable_item)
+
+Let's check it out
+>>> from sparc.cache import ICachedItemMapper, ICachedItem
+>>> ICachedItemMapper.providedBy(mapper)
+True
+>>> mapper.key()
+'id'
+>>> cached_item = mapper.factory()
+>>> ICachedItem.providedBy(cached_item)
+True
+>>> mapper.check(cachable_item)
+True
+>>> cached_item = mapper.get(cachable_item)
+>>> ICachedItem.providedBy(cached_item)
+True
+>>> cached_item.id == cachable_item.attributes['id'] == '1'
+True
+>>> cached_item.color == cachable_item.attributes['color'] == 'blue'
+True
+
+We can also do some manipulation of the attribute data by defining a filter
+function for the mapper factory.  Let's say we wanted to convert the
+id into a Python int.
+>>> def my_filter(name, value):
+...     if name == 'id':
+...         return int(value)
+...     return value
+
+>>> mapper = createObject(u'sparc.cache.simple_item_mapper', 
+... 									'id', cachable_item, filter=my_filter)
+>>> cached_item = mapper.get(cachable_item)
+>>> cached_item.id
+1
