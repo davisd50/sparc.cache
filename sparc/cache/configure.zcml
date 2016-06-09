@@ -25,9 +25,26 @@
         factory=".item.CachedItemMapperFactory"
         name="sparc.cache.CachedItemMapperFactory"
         />
+
+
+	<!--
+	Simple item mapper allows creation of a ICachedItemMapper with only an
+	implementation of ICachedItem
+	-->
+    <utility
+        component=".item.simpleItemMapperFactory"
+        name="sparc.cache.simple_item_mapper"
+        />
+
     <adapter
         provides=".ICachableItem"
         for="sparc.entity.IEntity"
         factory=".entity.CachableItemForEntity"
         />
+    
+    <utility
+        component=".splunk.cacheAreaForSplunkKVFactory"
+        name="sparc.cache.splunk_kv_cache_area"
+        />
+
 </configure>

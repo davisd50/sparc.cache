@@ -34,6 +34,7 @@ setup(name='sparc.cache',
       install_requires=[
           'setuptools',
           'SQLAlchemy',
+          'requests', # splunk REST calls
           'zope.event',
           'zope.lifecycleevent',
           'sparc.common',

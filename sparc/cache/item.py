@@ -39,53 +39,6 @@ class CachedItemMapperFactory(object):
     def getInterfaces(self):
         return [ICachedItemMapper]
 
-class SimpleItemMapper(object):
-    """A simple attribute item mapper
-    
-    A very simple implementation that will generate on-the-fly ICachedItem
-    objects with one-to-one mappings to ICachableItem.attributes key/value.
-    """
-    implements(ICachedItemMapper)
-    
-    def __init__(self, key, CacheableItem, filter=None):
-        """Init
-        
-        Args:
-            key: String name of CacheableItem.attributes key that should be 
-                 considered the unique primary key identifier for the object.
-            CacheableItem: instance of sparc.cache.ICachableItem whose
-                           attributes have the required keys populated
-            filter: Callable taking two arguments.  The first argument is the
-                    attribute name, the second is the ICachableItem value of
-                    that attribute.  The return value should be what will be
-                    assigned to the related attribute on the ICacheItem
-        """
-        self._key = key
-        self.mapper = {k:k for k in CacheableItem.attributes}
-        self.filter = filter if filter else lambda x,y:y
-    
-    #ICachedItemMapper
-    def key(self):
-        return self._key
-    
-    def factory(self):
-        ci = type('SimpleItemMapperCachedItem', (object,), {key:None for key in self.mapper.keys()})
-        alsoProvides(ci, ICachedItem)
-        return ci
-    
-    def get(self, CachableItem):
-        ci = self.factory()
-        for name in self.mapper:
-            setattr(ci, name, self.filter(name, CachableItem.attributes[name]))
-        return ci
-    
-    def check(self, CachableItem):
-        for name in self.mapper:
-            if name not in CachableItem.attributes:
-                return False
-        return True
-simpleItemMapperFactory = Factory(SimpleItemMapper)
-
 class cachableItemMixin(object):
     """Base class for ICachableItem implementations
     """
@@ -186,4 +139,54 @@ class ageableCacheItemMixin(cachedItemMixin):
         return self._expiration_age
     def expired(self):
         return datetime.datetime.now > self._expiration
+
+class SimpleItemMapper(object):
+    """A simple attribute item mapper
+    
+    A very simple implementation that will generate on-the-fly ICachedItem
+    objects with one-to-one mappings to ICachableItem.attributes key/value.
+    """
+    implements(ICachedItemMapper)
+    
+    def __init__(self, key, CacheableItem, filter=None):
+        """Init
+        
+        Args:
+            key: String name of CacheableItem.attributes key that should be 
+                 considered the unique primary key identifier for the object.
+            CacheableItem: instance of sparc.cache.ICachableItem whose
+                           attributes have the required keys populated
+            filter: Callable taking two arguments.  The first argument is the
+                    attribute name, the second is the ICachableItem value of
+                    that attribute.  The return value should be what will be
+                    assigned to the related attribute on the ICacheItem
+        """
+        self._key = key
+        self.mapper = {k:k for k in CacheableItem.attributes}
+        self.filter = filter if filter else lambda x,y:y
+    
+    #ICachedItemMapper
+    def key(self):
+        return self._key
+    
+    def factory(self):
+        #base = cachedItemMixin()
+        #base._key = self.key()
+        ci = type('SimpleItemMapperCachedItem', (cachedItemMixin,), {key:None for key in self.mapper.keys()})()
+        ci._key = self.key()
+        alsoProvides(ci, ICachedItem)
+        return ci
+    
+    def get(self, CachableItem):
+        ci = self.factory()
+        for name in self.mapper:
+            setattr(ci, name, self.filter(name, CachableItem.attributes[name]))
+        return ci
+    
+    def check(self, CachableItem):
+        for name in self.mapper:
+            if name not in CachableItem.attributes:
+                return False
+        return True
+simpleItemMapperFactory = Factory(SimpleItemMapper)
     
