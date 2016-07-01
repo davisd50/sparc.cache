@@ -4,6 +4,7 @@
     i18n_domain="sparc.cache">
     
     <include package=".sources" />
+    <include package=".splunk" />
     
     <!--
     SQLAlchemy Implementation of ITransactionalCacheArea
@@ -36,15 +37,18 @@
         name="sparc.cache.simple_item_mapper"
         />
 
+    <utility
+        component=".item.simpleCachableItemFactory"
+        name="sparc.cache.simple_cachable_item"
+        />
+    <utility
+        component=".item.cachableItemFromSchemaFactory"
+        name="sparc.cache.simple_cacheable_item_from_schema"
+        />
     <adapter
         provides=".ICachableItem"
         for="sparc.entity.IEntity"
         factory=".entity.CachableItemForEntity"
-        />
-    
-    <utility
-        component=".splunk.cacheAreaForSplunkKVFactory"
-        name="sparc.cache.splunk_kv_cache_area"
         />
 
 </configure>

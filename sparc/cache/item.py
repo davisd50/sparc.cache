@@ -64,6 +64,19 @@ class cachableItemMixin(object):
         if not self.attributes[self.key]:
             raise ValueError("expected item's key attribute to have a non-empty value")
         logger.debug("item passed validation: %s", str(self.getId()))
+simpleCachableItemFactory = Factory(cachableItemMixin)
+
+class CachableItemFromSchema(cachableItemMixin):
+    """Create a ICachableItem from a zope schema interface
+    """
+    implements(ICachableItem)
+    def __init__(self, key, schema, object=None):
+        super(CachableItemFromSchema, self).__init__(key, 
+                            {k:None for k in getFieldNames(schema)})
+        if object:
+            for name in getFieldNames(schema):
+                self.attributes[name] = getattr(object, name)
+cachableItemFromSchemaFactory = Factory(CachableItemFromSchema)
 
 class cachedItemMixin(object):
     """Base class for ICachedItem implementations
