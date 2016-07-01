@@ -8,7 +8,7 @@ class ICachedItemMapper(Interface):
     as a date, then they should be object adaptable to IManagedCachedItemMapperAttribute
     """
     
-    mapper = Attribute("Dictionary map of ICachedItem attribute keys to equivalent ICachableItem attribute keys.")
+    mapper = Attribute("Dictionary map of ICachedItem attribute names to equivalent ICachableItem.attribute keys.")
         
     def key():
         """Returns string identifier of ICachedItem attribute that represents unique item entries (e.g. primary key field name)"""
