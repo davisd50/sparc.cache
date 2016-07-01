@@ -1,0 +1,20 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    i18n_domain="sparc.cache">
+    
+    <utility
+        component=".area.cacheAreaForSplunkKVFactory"
+        name="sparc.cache.splunk_kv_cache_area"
+        />
+
+    <adapter
+        provides="sparc.cache.ICacheArea"
+        for="sparc.cache.ICachedItemMapper
+             sparc.db.splunk.ISplunkKVCollectionSchema
+             sparc.db.splunk.ISplunkConnectionInfo
+             sparc.db.splunk.ISPlunkKVCollectionIdentifier"
+        factory=".area.CacheAreaForSplunkKV"
+        />
+ 
+</configure>

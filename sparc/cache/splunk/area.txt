@@ -1,0 +1,109 @@
+ICacheArea for Splunk Key/Value Collection store
+=================================================
+
+Splunk Key/Value Collections can be used as an ICacheArea.  This can be
+useful to get data from 3rd party source to enable correlation within Splunk.
+
+The implementation allows caching of multiple data types into a single
+ICacheArea, but this flexibility comes at the cost of some extra initialization
+work for cache area.
+
+We start by defining the schemas of the data types we are dealing with.  We'll
+create 2 different types of data schemas.
+>>> from zope.interface import Interface
+>>> from zope import schema
+
+>>> class IType1(Interface):
+...     id = schema.ASCII(title=u'id')
+...     name = schema.TextLine(title=u'name')
+
+>>> class IType2(Interface):
+...     title = schema.TextLine(title=u'title')
+...     description = schema.Text(title=u'description')
+
+We now need to create implementations of ICachableItem, ICachedItem, and
+ICachedItemMapper based on this schema.
+
+We can create ICachableItem instances for each schema using the simple cachable 
+item factory.
+>>> from zope.component import createObject
+>>> cachable_item_type1 = createObject(u'sparc.cache.simple_cachable_item',
+... 						 key='id', attributes={'id':'12','name':u'a name'})
+>>> cachable_item_type2 = createObject(u'sparc.cache.simple_cachable_item',
+... 						 				 key='title',
+... 										  attributes={'title':u'A Title',
+... 										   'description':u'a description'})
+
+We can leverage the sparc.cache.simple_item_mapper factory component to
+generate ICachedItemMapper (and thus also ICachedItem) instances for the
+2 types above.  Note: this method will create ICachedItem instances that have
+one-to-one mappings against the attribute keys available in the given
+ICachableItem factory argument.
+>>> mapper_type1 = createObject(u'sparc.cache.simple_item_mapper',
+... 													'id',
+... 													cachable_item_type1)
+>>> mapper_type2 = createObject(u'sparc.cache.simple_item_mapper',
+... 													'title',
+... 													cachable_item_type2)
+
+We're now in a position to identify the required Splunk KV collection schemas.
+We can use an adapter provided within sparc.db.splunk to convert the 
+schemas defined above into the appropriate Splunk KV schemas automatically.
+>>> from sparc.db.splunk import ISplunkKVCollectionSchema
+>>> splunk_kv_schema_type1 = ISplunkKVCollectionSchema(IType1)
+>>> splunk_kv_schema_type2 = ISplunkKVCollectionSchema(IType2)
+
+We need to create separate ICacheArea instances for each of the types.  We need 
+4 pieces of information to adapt into a ICacheArea,
+  - ICachedItemMapper (got this above)
+  - ISplunkKVCollectionSchema (got this above)
+  - ISplunkConnectionInfo (we'll use the a test connection, see below)
+  - ISPlunkKVCollectionIdentifier (we'll create this, see below)
+
+First, we'll get the Splunk connection information
+>>> from sparc.db.splunk.testing import SPARC_DB_SPLUNK_INTEGRATION_LAYER
+>>> sci = SPARC_DB_SPLUNK_INTEGRATION_LAYER.sci
+
+Now, we'll create the two collection identifiers
+>>> kv_id1 = createObject(u"sparc.db.splunk.kv_collection_identifier",
+... 											collection=u'type1',
+... 											application=u'search',
+... 											username=u'nobody')
+>>> kv_id2 = createObject(u"sparc.db.splunk.kv_collection_identifier",
+... 											collection=u'type2',
+... 											application=u'search',
+... 											username=u'nobody')
+
+We can now create the cache areas via a multi-adapter
+>>> from zope.component import getMultiAdapter
+>>> from sparc.cache import ICacheArea
+>>> ca1 = getMultiAdapter(
+... 		(mapper_type1, splunk_kv_schema_type1, sci, kv_id1), ICacheArea)
+>>> ca2 = getMultiAdapter(
+... 		(mapper_type2, splunk_kv_schema_type2, sci, kv_id2), ICacheArea)
+
+Init the areas, this sets up the KV Collection schema
+>>> ca1.initialize()
+>>> ca2.initialize()
+
+Our cachable items from above are not there yet
+>>> ca1.get(cachable_item_type1)
+>>> ca2.get(cachable_item_type2)
+
+Let's add them
+>>> cached_item_type1 = ca1.cache(cachable_item_type1)
+>>> cached_item_type1.getId()
+'12'
+>>> cached_item_type2 = ca2.cache(cachable_item_type2)
+>>> cached_item_type2.getId()
+u'A Title'
+
+Caching them again does not change anything
+>>> ca1.cache(cachable_item_type1)
+>>> ca2.cache(cachable_item_type2)
+
+We can get them now
+>>> ca1.get(cachable_item_type1).getId()
+u'12'
+>>> ca2.get(cachable_item_type2).getId()
+u'A Title'
