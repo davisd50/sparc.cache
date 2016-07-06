@@ -1,11 +1,11 @@
 import json
 import requests
-import xml.etree.ElementTree as ET
 from zope.component.factory import Factory
 from zope.event import notify
 from zope.interface import implements
 from sparc.cache.events import CacheObjectCreatedEvent, CacheObjectModifiedEvent
-from sparc.cache import ICacheArea
+from sparc.cache import ICachableSource
+from sparc.cache import ITrimmableCacheArea
 from sparc.db.splunk.kvstore import current_kv_names
 
 from sparc.logging import logging
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class CacheAreaForSplunkKV(object):
     """An area where cached information can be stored persistently."""
-    implements(ICacheArea)
+    implements(ITrimmableCacheArea)
 
     def __init__(self, mapper, schema, sci, kv_id):
         """Object initializer
@@ -62,6 +62,24 @@ class CacheAreaForSplunkKV(object):
                         data=json.dumps(self._data(CachedItem)), 
                         verify=False)
         r.raise_for_status()
+    
+    def _delete(self, id_):
+        if not id_:
+            raise ValueError("Expected valid id for deletion")
+        r = requests.delete(self.url+"storage/collections/data/"+self.collname+'/'+str(id_),
+                        auth=self.auth,
+                        verify=False)
+        r.raise_for_status()
+
+    def _all_ids(self):
+        r = requests.get(self.url+"storage/collections/data/"+self.collname,
+                        auth=self.auth,
+                        headers = {'Content-Type': 'application/json'},
+                        params={'output_type': 'json', 'fields':'id'}, 
+                        verify=False)
+        r.raise_for_status()
+        data = set(map(lambda d: str(d['id']), r.json()))
+        return data
 
     #ICacheArea
     def get(self, CachableItem):
@@ -117,7 +135,9 @@ class CacheAreaForSplunkKV(object):
            available entries in ICachableSource
         """
         _count = 0
+        self._import_source_items_id_list = set() # used to help speed up trim()
         for item in CachableSource.items():
+            self._import_source_items_id_list.add(item.getId())
             if self.cache(item):
                 _count += 1
         return _count
@@ -153,5 +173,19 @@ class CacheAreaForSplunkKV(object):
                         % (self.collname, str(self.schema)))
         if self.collname not in self.current_kv_names():
             raise EnvironmentError('expected %s in list of kv collections %s' % (self.collname, str(self.current_kv_names())))
+    
+    #ITrimmableCacheArea
+    def trim(self, source):
+        if not ICachableSource.providedBy(source):
+            #we'll fake a partial ICachableSource for use with import_source()
+            source_type = type('FakeCachableSource', (object,), {})
+            _source = source #re-assign due to closure issue with source re-assignment below
+            source_type.items = lambda self: _source
+            source = source_type()
+        updated = self.import_source(source)
+        diff = self._all_ids() - self._import_source_items_id_list
+        map(self._delete, diff)
+        return (updated, len(diff), )
+            
 
 cacheAreaForSplunkKVFactory = Factory(CacheAreaForSplunkKV)

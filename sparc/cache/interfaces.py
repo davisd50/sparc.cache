@@ -126,6 +126,27 @@ class ITransactionalCacheArea(ICacheArea):
     def rollback():
         """Rollback changes for transaction capable ICacheAreas"""
 
+class ITrimmableCacheArea(ICacheArea):
+    """An area whose contents can be trimmed
+    
+    This should be used in cases where a cache area's contents should be 
+    updated to match a sources contents exactly on successive calls
+    """
+    
+    def trim(source):
+        """Similar to import_source, except any items found in cache that are
+           not found in the source will be removed from the cache.
+
+        Args:
+            source: either ICachableSource or a iterable of 
+                    ICachableItem instances.  All entries in the cache
+                    area not found in the source will be removed from the area.
+        Returns:
+            tuple whose first entry is the number of items added/updated in
+            the cache and whose second entry is how many items were removed
+            from the cache.
+        """
+
 class ILocatableCacheArea(ICacheArea):
     """
     Same as ICacheArea except zope.location.ILocation must be provided by

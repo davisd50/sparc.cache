@@ -7,13 +7,14 @@ from sparc.db.splunk.testing import SPARC_DB_SPLUNK_INTEGRATION_LAYER
 
 import requests
 from zope.component.eventtesting import getEvents
-from zope.interface import alsoProvides
+from zope.interface import alsoProvides, classImplements
 from sparc.cache import ICachableItem
 from sparc.cache.events import ICacheObjectCreatedEvent
 from sparc.cache.events import ICacheObjectModifiedEvent
 from sparc.cache.splunk.area import CacheAreaForSplunkKV
 from sparc.db.splunk import ISplunkKVCollectionSchema
 from sparc.db.splunk.tests.test_kvstore import ITestSchema
+from sparc.cache.interfaces import ICachableSource
 
 kv_names = {}
 kv_names['test_collection'] = {}
@@ -27,9 +28,18 @@ class SparcCacheSplunkAreaTestCase(unittest.TestCase):
     sm = component.getSiteManager()
     
     def cachable_item(self, id=None, name=None):
-        cachable_item = type('CachableItem', (object,), {'attributes':{'id':id,'name':name}})
+        cachable_item = type('TestCachableItem', 
+                             (object,), 
+                             {
+                              'key': 'id',
+                              'attributes':{'id':id,'name':name}
+                             }
+                             )
+        def getId(self):
+            return self.attributes['id']
+        cachable_item.getId = getId
         alsoProvides(cachable_item, ICachableItem)
-        return cachable_item
+        return cachable_item()
     
     def kv_id(self, collection):
         kv_id = component.createObject(u'sparc.db.splunk.kv_collection_identifier')
@@ -132,17 +142,36 @@ class SparcCacheSplunkAreaTestCase(unittest.TestCase):
         self.assertTrue(self.cache_area.isDirty(cachable_item))
         self.cache_area.cache(cachable_item)
         self.assertFalse(self.cache_area.isDirty(cachable_item))
-    
-    def test_import_source(self):
+
+    def get_cachable_source(self):
         ci1 = self.cachable_item('123','name 1')
         ci2 = self.cachable_item('abc','name 2')
-        cs = type('TestCacheSource', (object, ),{'items': None})
+        cs = type('TestCacheSource', (object, ),{'_items': [ci1,ci2]})
         def items(self):
-            for ci in [ci1, ci2]:
-                yield ci
-        cs.items = items.__get__(self, cs.__class__) # creates a bound method for TestCacheSource type
-        count = self.cache_area.import_source(cs)
+            return self._items
+        cs.items = items
+        classImplements(cs, ICachableSource)
+        return cs()
+    
+    def test_import_source_and_trim(self):
+        count = self.cache_area.import_source(self.get_cachable_source())
         self.assertEquals(count, 2)
+        data = self.cache_area._all_ids()
+        self.assertEquals(data, set(['abc','123']))
+        
+        # trim with a ICachablesource
+        cs = self.get_cachable_source()
+        popped = cs._items.pop()
+        counts = self.cache_area.trim(cs)
+        self.assertEquals(counts, (0,1,))
+        self.assertTrue(self.cache_area.isDirty(popped))
+        
+        #trim with a iterable of ICahableItem
+        trimmed = cs._items[0]
+        counts = self.cache_area.trim([popped])
+        self.assertEquals(counts, (1,1,))
+        self.assertTrue(self.cache_area.isDirty(trimmed))
+        self.assertFalse(self.cache_area.isDirty(popped))
 
 # this will insure the doc test clean-up will happen for the created KV collections
 kv_names['type1'] = {}
