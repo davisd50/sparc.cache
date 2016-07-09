@@ -5,19 +5,8 @@
     
     <include package=".sources" />
     <include package=".splunk" />
-    
-    <!--
-    SQLAlchemy Implementation of ITransactionalCacheArea
-        - This allows the caching of items to a SQL database back end
-    -->
-    <adapter
-        provides=".ITransactionalCacheArea"
-        for="sparc.db.sql.sa.ISqlAlchemyDeclarativeBase
-             sparc.db.sql.sa.ISqlAlchemySession
-             .ICachedItemMapper"
-        factory=".sql.SqlObjectCacheArea"
-        name="sparc.cache.sqlalchemy_cache"
-        />
+    <include package=".sql" />
+
     <!--
     Utility to perform ICachedItemMapper subscriber lookups based on a given
     ICachableSource, CachedItemFactory combination

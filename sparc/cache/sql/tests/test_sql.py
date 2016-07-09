@@ -4,7 +4,7 @@ from sparc.testing.fixture import test_suite_mixin
 
 
 class test_suite(test_suite_mixin):
-    package = 'sparc.cache'
+    package = 'sparc.cache.sql'
     module = 'sql'
 
 
