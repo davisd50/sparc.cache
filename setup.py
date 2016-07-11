@@ -34,11 +34,11 @@ setup(name='sparc.cache',
       install_requires=[
           'setuptools',
           'SQLAlchemy',
-          'requests', # splunk REST calls
           'zope.event',
           'zope.lifecycleevent',
           'sparc.common',
-          'sparc.db'
+          'sparc.db',
+          'sparc.utils'
           # -*- Extra requirements: -*-
       ],
       tests_require=[
