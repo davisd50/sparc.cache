@@ -272,7 +272,8 @@ We'll use the test_csvdata.csv file located under the
 sparc.cache.sources.tests directory.
 
     >>> import os
-    >>> csv_file = os.path.dirname(os.path.abspath(__file__)) + os.sep + 'sources' + os.sep + 'tests' + os.sep + 'test_csvdata.csv'
+    >>> import sparc.cache
+    >>> csv_file = os.path.dirname(os.path.abspath(sparc.cache.__file__)) + os.sep + 'sources' + os.sep + 'tests' + os.sep + 'test_csvdata.csv'
 
 We can now create instances of sparc.cache.sources.csvdata.CSVSource via 
 its factory.  This object will be used to generate ICachableItem objects for

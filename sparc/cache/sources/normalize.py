@@ -6,7 +6,7 @@ from zope.component.factory import Factory
 from sparc.cache import IManagedCachedItemMapperAttribute, IManagedCachedItemMapperAttributeKeyWrapper
 from sparc.cache.sources import INormalizedDateTime
 from sparc.cache.item import cachableItemMixin
-from sparc.cache.sql import SqlObjectMapperMixin
+from sparc.cache.sql.sql import SqlObjectMapperMixin
 
 class normalizedFieldNameSqlObjectMapperMixin(SqlObjectMapperMixin):
     """Base class for normalized field name ICachedItemMapper implementations
