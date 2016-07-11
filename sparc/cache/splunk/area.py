@@ -50,7 +50,7 @@ class CacheAreaForSplunkKV(object):
 
     def current_kv_names(self):
         """Return set of string names of current available Splunk KV collections"""
-        return current_kv_names(self.sci, self.username, self.appname)
+        return current_kv_names(self.sci, self.username, self.appname, request=self._request)
     
     def request(self, *args, **kwargs):
         return self._request.request(*args, **kwargs)
