@@ -97,8 +97,10 @@ class SparcCacheSplunkAreaTestCase(unittest.TestCase):
         ca.initialize()
         self.assertIn('test_init', self.layer.get_current_kv_names())
         
+        from sparc.utils.requests import IRequest
         kv_id = self.layer.get_kv_id(u'test_init')
-        schema_test = component.getMultiAdapter((self.layer.sci, kv_id,), 
+        req = self.sm.getUtility(IRequest)
+        schema_test = component.getMultiAdapter((self.layer.sci, kv_id,req,), 
                                                 ISplunkKVCollectionSchema)
         self.assertEquals(schema, schema_test)
         
@@ -109,7 +111,7 @@ class SparcCacheSplunkAreaTestCase(unittest.TestCase):
                                   self.kv_id(u"test_init"),
                                   self.request)
         ca.initialize()
-        schema_test = component.getMultiAdapter((self.layer.sci, kv_id,), 
+        schema_test = component.getMultiAdapter((self.layer.sci, kv_id,req,), 
                                                 ISplunkKVCollectionSchema)
         self.assertEquals(schema, schema_test)
     
