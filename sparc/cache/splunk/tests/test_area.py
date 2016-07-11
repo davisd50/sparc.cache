@@ -47,6 +47,13 @@ class SparcCacheSplunkAreaTestCase(unittest.TestCase):
         kv_id.application = self.layer.kv_appname
         kv_id.username = self.layer.kv_username
         return kv_id
+    
+    @property
+    def request(self):
+        req = component.createObject(u"sparc.utils.requests.request")
+        req.req_kwargs = {'verify': False}
+        req.gooble_warnings = True
+        return req
 
     def setUp(self):
         self.tearDown() # destroy any left over kv collections from these tests
@@ -57,7 +64,8 @@ class SparcCacheSplunkAreaTestCase(unittest.TestCase):
         schema.update(kv_names['test_collection'])
         self.cache_area = CacheAreaForSplunkKV(self.mapper, 
                                 schema, self.layer.sci, 
-                                self.kv_id(u"test_collection"))
+                                self.kv_id(u"test_collection"),
+                                self.request)
     
     def tearDown(self):
         collections = ['test_init']
@@ -83,7 +91,8 @@ class SparcCacheSplunkAreaTestCase(unittest.TestCase):
                                         #filter=lambda x,y: str(y))
         schema = ISplunkKVCollectionSchema(ITestSchema)
         ca = CacheAreaForSplunkKV(mapper, schema, self.layer.sci, 
-                                  self.kv_id(u"test_init"))
+                                  self.kv_id(u"test_init"),
+                                  self.request)
         self.assertNotIn('test_init', self.layer.get_current_kv_names())
         ca.initialize()
         self.assertIn('test_init', self.layer.get_current_kv_names())
@@ -97,7 +106,8 @@ class SparcCacheSplunkAreaTestCase(unittest.TestCase):
         ITestSchema.new = zschema.TextLine(title=u'new')
         schema = ISplunkKVCollectionSchema(ITestSchema)
         ca = CacheAreaForSplunkKV(mapper, schema, self.layer.sci, 
-                                  self.kv_id(u"test_init"))
+                                  self.kv_id(u"test_init"),
+                                  self.request)
         ca.initialize()
         schema_test = component.getMultiAdapter((self.layer.sci, kv_id,), 
                                                 ISplunkKVCollectionSchema)

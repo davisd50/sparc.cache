@@ -1,11 +1,13 @@
 import json
-import requests
-from zope.component.factory import Factory
+from zope.component import adapts
 from zope.event import notify
 from zope.interface import implements
 from sparc.cache.events import CacheObjectCreatedEvent, CacheObjectModifiedEvent
 from sparc.cache import ICachableSource
 from sparc.cache import ITrimmableCacheArea
+import sparc.cache
+import sparc.db.splunk
+import sparc.utils.requests
 from sparc.db.splunk.kvstore import current_kv_names
 
 from sparc.logging import logging
@@ -14,8 +16,13 @@ logger = logging.getLogger(__name__)
 class CacheAreaForSplunkKV(object):
     """An area where cached information can be stored persistently."""
     implements(ITrimmableCacheArea)
+    adapts(sparc.cache.ICachedItemMapper,
+           sparc.db.splunk.ISplunkKVCollectionSchema,
+           sparc.db.splunk.ISplunkConnectionInfo,
+           sparc.db.splunk.ISPlunkKVCollectionIdentifier,
+           sparc.utils.requests.IRequest)
 
-    def __init__(self, mapper, schema, sci, kv_id):
+    def __init__(self, mapper, schema, sci, kv_id, request):
         """Object initializer
 
         Args:
@@ -25,58 +32,60 @@ class CacheAreaForSplunkKV(object):
             sci: sparc.db.splunk.ISplunkConnectionInfo instance to provide
                  connection information for Splunk indexing server
             kv_id: Object providing sparc.db.splunk.ISPlunkKVCollectionIdentifier
+            request: Object providing sparc.utils.requests.IRequest
         """
+        self.gooble_request_warnings = False
         self.mapper = mapper
         self.schema = schema
         self.sci = sci
         self.kv_id = kv_id
+        self._request = request
+        self._request.req_kwargs['auth'] = (self.sci['username'], self.sci['password'],)
         self.collname = kv_id.collection
         self.appname = kv_id.application
         self.username = kv_id.username
         self.url = "".join(['https://',sci['host'],':',sci['port'],
                                     '/servicesNS/',self.username,'/',
                                                         self.appname,'/'])
-        self.auth = (self.sci['username'], self.sci['password'], )
 
     def current_kv_names(self):
         """Return set of string names of current available Splunk KV collections"""
         return current_kv_names(self.sci, self.username, self.appname)
     
+    def request(self, *args, **kwargs):
+        return self._request.request(*args, **kwargs)
+
     def _data(self, CachedItem):
         data = {k:getattr(CachedItem, k) for k in self.mapper.mapper}
         data['_key'] = CachedItem.getId()
         return data
     
     def _add(self, CachedItem):
-        r = requests.post(self.url+"storage/collections/data/"+self.collname,
-                        auth=self.auth,
-                        headers = {'Content-Type': 'application/json'},
-                        data=json.dumps(self._data(CachedItem)), 
-                        verify=False)
+        r = self.request('post',
+                         self.url+"storage/collections/data/"+self.collname, 
+                         headers={'Content-Type': 'application/json'}, 
+                         data=json.dumps(self._data(CachedItem)))
         r.raise_for_status()
     
     def _update(self, CachedItem):
-        r = requests.post(self.url+"storage/collections/data/"+self.collname+'/'+CachedItem.getId(),
-                        auth=self.auth,
-                        headers = {'Content-Type': 'application/json'},
-                        data=json.dumps(self._data(CachedItem)), 
-                        verify=False)
+        r = self.request('post',
+            self.url+"storage/collections/data/"+self.collname+'/'+CachedItem.getId(),
+            headers={'Content-Type': 'application/json'}, 
+            data=json.dumps(self._data(CachedItem)))
         r.raise_for_status()
     
     def _delete(self, id_):
         if not id_:
             raise ValueError("Expected valid id for deletion")
-        r = requests.delete(self.url+"storage/collections/data/"+self.collname+'/'+str(id_),
-                        auth=self.auth,
-                        verify=False)
+        r = self.request('delete', 
+                self.url+"storage/collections/data/"+self.collname+'/'+str(id_))
         r.raise_for_status()
 
     def _all_ids(self):
-        r = requests.get(self.url+"storage/collections/data/"+self.collname,
-                        auth=self.auth,
-                        headers = {'Content-Type': 'application/json'},
-                        params={'output_type': 'json', 'fields':'id'}, 
-                        verify=False)
+        r = self.request('get',
+                         self.url+"storage/collections/data/"+self.collname,
+                         headers={'Content-Type': 'application/json'}, 
+                         params={'output_type': 'json', 'fields':'id'})
         r.raise_for_status()
         data = set(map(lambda d: str(d['id']), r.json()))
         return data
@@ -85,11 +94,9 @@ class CacheAreaForSplunkKV(object):
     def get(self, CachableItem):
         """Returns current ICachedItem for ICachableItem or None if not cached"""
         cached_item = self.mapper.get(CachableItem)
-        r = requests.get(self.url+"storage/collections/data/"+\
-                                        self.collname+'/'+cached_item.getId(),
-                            auth=self.auth,
-                            data={'output_mode': 'json'},
-                            verify=False)
+        r = self.request('get',
+            self.url+"storage/collections/data/"+self.collname+'/'+cached_item.getId(),
+            data={'output_mode': 'json'})
         if r.ok:
             # we need to update the object with the values found in the cache area
             data = r.json()
@@ -147,27 +154,24 @@ class CacheAreaForSplunkKV(object):
         if self.collname not in self.current_kv_names():
             return # nothing to do
         # we'll simply delete the entire collection and then re-create it.
-        r = requests.delete(self.url+"storage/collections/data/"+self.collname,
-                        auth=self.auth,
-                        verify=False)
+        r = self.request('delete',
+                         self.url+"storage/collections/data/"+self.collname)
         r.raise_for_status()
         self.initialize()
         
     def initialize(self):
         """Instantiates the cache area to be ready for updates"""
         if self.collname not in self.current_kv_names():
-            r = requests.post(self.url+"storage/collections/config",
-                            auth=self.auth,
-                            headers = {'content-type': 'application/json'},
-                            data={'name': self.collname},
-                            verify=False)
+            r = self.request('post',
+                             self.url+"storage/collections/config",
+                             headers={'content-type': 'application/json'},
+                             data={'name': self.collname})
             r.raise_for_status()
         # initialize schema
-        re = requests.post(self.url+"storage/collections/config/"+self.collname,
-                            auth=self.auth,
-                            headers = {'content-type': 'application/json'},
-                            data=self.schema,
-                            verify=False)
+        re = self.request('post',
+                          self.url+"storage/collections/config/"+self.collname,
+                          headers = {'content-type': 'application/json'},
+                          data=self.schema)
         re.raise_for_status()
         logger.info("initialized Splunk Key Value Collection %s with schema %s"\
                         % (self.collname, str(self.schema)))
@@ -186,6 +190,4 @@ class CacheAreaForSplunkKV(object):
         diff = self._all_ids() - self._import_source_items_id_list
         map(self._delete, diff)
         return (updated, len(diff), )
-            
 
-cacheAreaForSplunkKVFactory = Factory(CacheAreaForSplunkKV)
