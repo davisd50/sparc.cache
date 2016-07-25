@@ -16,4 +16,9 @@
         name="sparc.cache.sqlalchemy_cache"
         />
 
+    <utility
+        component=".item.saCachedItemFromZopeSchemaInterfaceFactory"
+        name="sparc.cache.sa_cached_item_from_schema"
+        />
+
 </configure>

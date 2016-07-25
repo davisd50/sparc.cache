@@ -42,6 +42,8 @@ setup(name='sparc.cache',
           # -*- Extra requirements: -*-
       ],
       tests_require=[
+          'zope.container',
+          'sparc.entity'
           'sparc.testing',
           'sparc.utils'
       ],
