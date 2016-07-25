@@ -6,6 +6,7 @@
     <include package=".sources" />
     <include package=".splunk" />
     <include package=".sql" />
+    <include package=".zodb" />
 
     <!--
     Utility to perform ICachedItemMapper subscriber lookups based on a given
