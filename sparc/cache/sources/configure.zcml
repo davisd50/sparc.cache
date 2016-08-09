@@ -26,4 +26,10 @@
         for=".INormalizedDateTime"
         factory=".normalizedDateTimeResolver"
         />
+    
+    
+    <utility
+        component=".iterable.cachableSourceFromIterableFactory"
+        name="sparc.cache.source_from_iterable"
+        />
 </configure>
