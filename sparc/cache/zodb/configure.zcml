@@ -3,14 +3,21 @@
     xmlns:i18n="http://namespaces.zope.org/i18n"
     i18n_domain="sparc.cache">
 
-    <!--
-    SQLAlchemy Implementation of ITransactionalCacheArea
-        - This allows the caching of items to a SQL database back end
-    -->
     <adapter
         provides="..ICacheArea"
         for="zope.container.interfaces.IContainer"
         factory=".container.IdentifiedPersistentObjectCacheAreaForZopeContainer"
+        />
+    <adapter
+        provides="..ITrimmableCacheArea"
+        for="zope.container.interfaces.IContainer"
+        factory=".container.IdentifiedPersistentObjectTrimmableCacheAreaForZopeContainer"
+        />
+    <adapter
+        provides="..ITransactionalCacheArea"
+        for="zope.container.interfaces.IContainer
+             sparc.db.zodb.IZODBDatabase"
+        factory=".container.IdentifiedPersistentObjectTransactionalTrimmableCacheAreaForZopeContainer"
         />
 
 </configure>

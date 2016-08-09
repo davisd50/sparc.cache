@@ -11,6 +11,7 @@ from zope.container.sample import SampleContainer
 from sparc.cache.events import ICacheObjectCreatedEvent
 from sparc.cache.events import ICacheObjectModifiedEvent
 from sparc.cache import ICacheArea
+from sparc.cache import ITrimmableCacheArea
 from sparc.entity import IEntity
 
 class SparcCacheZODBAreaTestCase(unittest.TestCase):
@@ -87,6 +88,28 @@ class SparcCacheZODBAreaTestCase(unittest.TestCase):
         delta = self.ca_sample.import_source(dummy_source([self.item1, self.item2]))
         self.assertEquals(delta, 2)
 
+class SparcTrimCacheZODBAreaTestCase(SparcCacheZODBAreaTestCase):
+    
+    def setUp(self):
+        super(SparcTrimCacheZODBAreaTestCase, self).setUp()
+
+        self.ca_sample = ITrimmableCacheArea(self.sample)
+        self.ca_btree = ITrimmableCacheArea(self.btree)
+
+    def test_cache(self):
+        self.assertTrue(self.ca_sample.isDirty(self.item1))
+        self.assertTrue(self.ca_sample.isDirty(self.item2))
+        self.assertTrue(self.ca_btree.isDirty(self.item1))
+        self.assertTrue(self.ca_btree.isDirty(self.item2))
+        
+        self.assertEquals(self.ca_sample.trim([self.item1, self.item2]), (2,0))
+        self.assertEquals(self.ca_btree.trim([self.item1, self.item2]), (2,0))
+        
+        self.assertEquals(self.ca_sample.trim([self.item2]), (0,1))
+        self.assertEquals(self.ca_btree.trim([self.item2]), (0,1))
+        
+        self.assertEquals(self.ca_sample.trim([self.item1, self.item2]), (1,0))
+        self.assertEquals(self.ca_btree.trim([self.item1, self.item2]), (1,0))
 
 class test_suite(test_suite_mixin):
     package = 'sparc.cache.zodb'
@@ -95,6 +118,7 @@ class test_suite(test_suite_mixin):
     def __new__(cls):
         suite = super(test_suite, cls).__new__(cls)
         suite.addTest(unittest.makeSuite(SparcCacheZODBAreaTestCase))
+        suite.addTest(unittest.makeSuite(SparcTrimCacheZODBAreaTestCase))
         return suite
 
 

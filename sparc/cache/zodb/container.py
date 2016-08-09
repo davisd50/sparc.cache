@@ -1,9 +1,13 @@
+import transaction
 from zope import component
 from zope import interface
 from sparc.cache.events import CacheObjectCreatedEvent, CacheObjectModifiedEvent
 from zope.container.interfaces import IContainer
 from zope.event import notify
+from sparc.cache import ICachableSource
 from sparc.cache import ICacheArea
+from sparc.cache import ITransactionalCacheArea
+from sparc.cache import ITrimmableCacheArea
 
 
 class IdentifiedPersistentObjectCacheAreaForZopeContainer(object):
@@ -69,3 +73,35 @@ class IdentifiedPersistentObjectCacheAreaForZopeContainer(object):
     def initialize(self):
         """Instantiates the cache area to be ready for updates"""
         # nothing to do here
+
+class IdentifiedPersistentObjectTrimmableCacheAreaForZopeContainer(
+                        IdentifiedPersistentObjectCacheAreaForZopeContainer):
+    interface.implements(ITrimmableCacheArea)
+    component.adapts(IContainer)
+    
+    def trim(self, source):
+        if not ICachableSource.providedBy(source):
+            source = component.createObject(u'sparc.cache.source_from_iterable', source)
+        updated = self.import_source(source)
+        item_ids = set([unicode(i.getId()) for i in source.items()])
+        cached_ids = set(self.context.keys())
+
+        remove_ids = cached_ids - item_ids
+        for id_ in remove_ids:
+            del self.context[id_]
+        return (updated, len(remove_ids))
+
+class IdentifiedPersistentObjectTransactionalTrimmableCacheAreaForZopeContainer(
+                    IdentifiedPersistentObjectTrimmableCacheAreaForZopeContainer):
+    interface.implements(ITransactionalCacheArea)
+    component.adapts(IContainer)
+
+    def commit(self):
+        """Commits changes for transaction capable ICacheAreas"""
+        # will default to thread-unique transaction manager
+        transaction.commit()
+    
+    def rollback(self):
+        """Rollback changes for transaction capable ICacheAreas"""
+        # will default to thread-unique transaction manager
+        transaction.abort()
