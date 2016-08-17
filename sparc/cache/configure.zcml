@@ -36,6 +36,11 @@
         name="sparc.cache.simple_cacheable_item_from_schema"
         />
     <adapter
+        provides=".ICachedItem"
+        for=".ICachedItemMapper"
+        factory=".item.SimpleCachedItemFromItemMapper"
+        />
+    <adapter
         provides=".ICachableItem"
         for="sparc.entity.IEntity"
         factory=".entity.CachableItemForEntity"

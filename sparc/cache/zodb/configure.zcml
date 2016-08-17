@@ -15,8 +15,7 @@
         />
     <adapter
         provides="..ITransactionalCacheArea"
-        for="zope.container.interfaces.IContainer
-             sparc.db.zodb.IZODBDatabase"
+        for="zope.container.interfaces.IContainer"
         factory=".container.IdentifiedPersistentObjectTransactionalTrimmableCacheAreaForZopeContainer"
         />
 

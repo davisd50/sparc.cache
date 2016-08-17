@@ -2,6 +2,7 @@ import datetime
 import inspect
 from zope.interface import alsoProvides
 from zope.interface import implements
+from zope.component import adapts
 from zope.component import subscribers
 from zope.component.interfaces import IFactory
 from zope.component.factory import Factory
@@ -153,6 +154,14 @@ class ageableCacheItemMixin(cachedItemMixin):
     def expired(self):
         return datetime.datetime.now > self._expiration
 
+class SimpleCachedItemFromItemMapper(cachedItemMixin):
+    implements(ICachedItem)
+    adapts(ICachedItemMapper)
+    def __init__(self, context):
+        self._key = context.key()
+        for key in context.mapper.keys():
+            setattr(self, key, None)
+
 class SimpleItemMapper(object):
     """A simple attribute item mapper
     
@@ -183,12 +192,7 @@ class SimpleItemMapper(object):
         return self._key
     
     def factory(self):
-        #base = cachedItemMixin()
-        #base._key = self.key()
-        ci = type('SimpleItemMapperCachedItem', (cachedItemMixin,), {key:None for key in self.mapper.keys()})()
-        ci._key = self.key()
-        alsoProvides(ci, ICachedItem)
-        return ci
+        return ICachedItem(self)
     
     def get(self, CachableItem):
         ci = self.factory()
